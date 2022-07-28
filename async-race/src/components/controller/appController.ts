@@ -134,9 +134,26 @@ class AppController {
         },
       }
     }
+  }
 
-    console.log(this.state.stateData)
+  public getButtonDisable() {
+    const pageNumber = this.state.stateData.pageNumber
+    const pagesCount = this.state.stateData.pagesCount
+    const next = (pageNumber + 1 <= pagesCount) ? false : true
+    const prev = (pageNumber - 1 >= 1) ? false : true
 
+    return [prev, next]
+  }
+
+  public changePageNumber(pageNumber: number){
+    const stateData = this.state.stateData
+
+    this.state.stateData = {
+      ...stateData,
+      pageNumber: pageNumber
+    }
+
+    this.getCars()
   }
 }
 

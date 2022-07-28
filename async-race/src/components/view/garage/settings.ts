@@ -19,20 +19,18 @@ class Settings extends Control {
   ){
     super(parent, 'div', className);
     const createField = new Control(this.node, 'div', 'settings__field field')
-    this.createInputList = []
-    this.drawInputField(
+
+    this.createInputList = this.drawInputField(
       createField.node,
-      this.createInputList,
       "Create",
       inputParams.create,
       onCreateCar
     )
     const disable = selectedCar? false : true
     const updateField = new Control(this.node, 'div', 'settings__field field')
-    this.updateInputList = []
-    this.drawInputField(
+
+     this.updateInputList = this.drawInputField(
       updateField.node,
-      this.updateInputList,
       'Update',
       inputParams.update, 
       onUpdateCar,
@@ -42,7 +40,6 @@ class Settings extends Control {
 
   private drawInputField(
     parent: HTMLElement,
-    list: Control<HTMLInputElement | HTMLButtonElement>[],
     text: string,
     param: Record<string, string>,
     signalClick: Signal<Omit<ICar, 'id'>>,
@@ -50,7 +47,6 @@ class Settings extends Control {
     ) {
 
     const inputName = new Input(parent, 'field__input-data', 'name', param.name, disable);
-    list.push(inputName)
     inputName.node.oninput = () => {
       this.onInputChange.emit({
         [text.toLowerCase()]: {
@@ -60,7 +56,6 @@ class Settings extends Control {
     }
 
     const inputColor = new Input(parent, 'field__input-color', 'color', param.color, disable);
-    list.push(inputColor)
     inputColor.node.oninput = () => {
       this.onInputChange.emit({
         [text.toLowerCase()]: {
@@ -70,11 +65,14 @@ class Settings extends Control {
     }
 
     const button = new Button(parent, 'button', text, disable)
-    list.push(button)
+    const list  = [inputName, inputColor, button]
+
     button.node.onclick = () => {    
       signalClick.emit({name: inputName.node.value, color: inputColor.node.value})
       this.resetInputs(list, disable) 
     }
+
+    return list
   }
 
   public changeInputsUpdate(car: ICar){
@@ -99,7 +97,6 @@ class Settings extends Control {
     const [ inputName, inputColor ] = list
     inputName.node.value = ''
     inputColor.node.value = '#000000'
-    console.log('dd')
     if (disable)
       this.updateInputList.map(input => input.node.disabled = true)
   }

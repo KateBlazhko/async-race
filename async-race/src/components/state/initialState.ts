@@ -15,5 +15,6 @@ export const initialState: IStateData = {
   pageNumber: 1,
   pageLimit: 7,
   currentPage: 1,
-  carsCount: 0
+  carsCount: 0,
+  pagesCount: 1,
 }

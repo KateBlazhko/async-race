@@ -20,6 +20,7 @@ export interface IStateData {
   pageLimit: number,
   currentPage: number,
   carsCount: number
+  pagesCount: number
 }
 
 export interface ISettings {
@@ -55,9 +56,12 @@ class AppState {
   set carsCount(value: number) {
     this._carsCount = value;
 
+    const pagesCount = Math.ceil(this._carsCount / this.stateData.pageLimit)
+
     this.stateData = {
       ...this.stateData,
-      carsCount: this._carsCount
+      carsCount: this._carsCount,
+      pagesCount: pagesCount
     }
 
     this.onGetCarsCount.emit(this._carsCount);
@@ -69,8 +73,6 @@ class AppState {
 
   set stateData(value: IStateData) {
     this._stateData = value;
-
-    // this.onGetCarsCount.emit(this._carsCount);
   }
 
   constructor() {
