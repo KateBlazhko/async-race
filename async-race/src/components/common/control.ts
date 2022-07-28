@@ -3,9 +3,9 @@ class Control<NodeType extends HTMLElement = HTMLElement> {
 
   constructor(
     parentNode: HTMLElement | null,
-    tagName = "div",
-    className = "",
-    content = ""
+    tagName = 'div',
+    className = '',
+    content = '',
   ) {
     const el = document.createElement(tagName);
     el.className = className;

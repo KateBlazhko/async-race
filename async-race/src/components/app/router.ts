@@ -1,4 +1,5 @@
-import App, { Page } from './app'
+import App, { Page } from './app';
+// import AppView, { Page } from './app'
 
 interface MatchPage {
   route: Page,
@@ -7,7 +8,7 @@ interface MatchPage {
 
 class Router {
   constructor(private app: App) {
-    this.app = app
+    this.app = app;
   }
 
   public change() {
@@ -16,7 +17,6 @@ class Router {
       this.app.createView(hash);
     });
   }
-
 }
 
-export default Router
+export default Router;
