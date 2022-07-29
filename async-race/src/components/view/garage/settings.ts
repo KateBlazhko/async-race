@@ -6,6 +6,7 @@ import Signal from '../../common/signal';
 
 
 class Settings extends Control {
+  public onGenerateCars: ()=> void
   private createInputList: Control<HTMLInputElement | HTMLButtonElement>[]
   private updateInputList: Control<HTMLInputElement | HTMLButtonElement>[]
 
@@ -18,27 +19,30 @@ class Settings extends Control {
     selectedCar: number | string
   ){
     super(parent, 'div', className);
+    this.onGenerateCars = () => {}
     const createField = new Control(this.node, 'div', 'settings__field field')
-
-    this.createInputList = this.drawInputField(
+    this.createInputList = this.renderInputField(
       createField.node,
       "Create",
       inputParams.create,
       onCreateCar
     )
+
     const disable = selectedCar? false : true
     const updateField = new Control(this.node, 'div', 'settings__field field')
-
-     this.updateInputList = this.drawInputField(
+     this.updateInputList = this.renderInputField(
       updateField.node,
       'Update',
       inputParams.update, 
       onUpdateCar,
       disable)
+    
+    const buttons = new Control(this.node, 'div', 'settings__buttons')
+    this.renderButton(buttons)
   }
   public onInputChange = new Signal<Omit<ISettings, 'create' | 'update'>>()
 
-  private drawInputField(
+  private renderInputField(
     parent: HTMLElement,
     text: string,
     param: Record<string, string>,
@@ -99,6 +103,23 @@ class Settings extends Control {
     inputColor.node.value = '#000000'
     if (disable)
       this.updateInputList.map(input => input.node.disabled = true)
+  }
+
+  renderButton(buttons: Control) {
+    const buttonRace = new Button(buttons.node, 'button', 'Race')
+    buttonRace.node.onclick = () => {
+      this.onGenerateCars()
+    }
+
+    const buttonReset = new Button(buttons.node, 'button', 'Reset', true)
+    buttonReset.node.onclick = () => {
+      this.onGenerateCars()
+    }
+
+    const buttonGenerateCars = new Button(buttons.node, 'button', 'Generate cars')
+    buttonGenerateCars.node.onclick = () => {
+      this.onGenerateCars()
+    }
   }
 
 }

@@ -4,10 +4,10 @@ class Footer extends Control {
   constructor(parent: HTMLElement | null, className: string) {
     super(parent, 'footer', className);
 
-    this.node.innerHTML = Footer.drawFooter();
+    this.node.innerHTML = Footer.renderFooter();
   }
 
-  private static drawFooter() {
+  private static renderFooter() {
     return `
     <a class="link" href="https://github.com/KateBlazhko">KateBlazhko</a>
     <span>2022</span>

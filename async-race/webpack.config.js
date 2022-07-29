@@ -38,8 +38,8 @@ const config = {
                 test: /\.(svg|ico)$/i,
                 type: 'asset/resource',
                 generator: {
-                    filename: 'assets/icons/[name][ext]',
-                  }
+                    filename: 'assets/[name][ext]',
+                }
             },
             {
                 test: /\.json$/i,

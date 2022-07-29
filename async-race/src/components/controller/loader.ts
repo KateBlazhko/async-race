@@ -1,6 +1,7 @@
 enum Status {
   'OK' = 200,
   'Created' = 201,
+  'Bad request' = 400,
   'Not Found' = 404,
 }
 
@@ -54,6 +55,27 @@ class Loader {
     }
   }
 
+  public async patch<Data>(
+    options: RespObject,
+    headers: Record<string, string>,
+    body?: string
+  ) {
+
+    try {
+      const method = 'PATCH';
+
+      const response = await fetch(this.makeUrl(options), { method, headers, body});
+      const checkRespose: Response = Loader.errorHandler(response, Status.OK);
+
+      if (checkRespose) {
+        const data = response.json() as Promise<Data>;
+        return data
+      }
+    } catch {
+      (err: Error) => console.error(err);
+    }
+  }
+
   public async post(
     options: RespObject,
     headers: Record<string, string>,
@@ -69,6 +91,23 @@ class Loader {
       if (checkRespose) {
         return true
       }
+    } catch {
+      (err: Error) => console.error(err);
+    }
+  }
+
+  public async postAll(
+    options: RespObject,
+    headers: Record<string, string>,
+    bodyArray: string[]
+  ) {
+
+    try {
+      const result = await Promise.all(bodyArray.map(item => 
+        this.post(options, headers, item)
+      ))
+
+      return true
     } catch {
       (err: Error) => console.error(err);
     }

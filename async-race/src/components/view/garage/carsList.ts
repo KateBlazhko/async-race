@@ -27,13 +27,19 @@ class CarsList extends Control {
 
   }
 
-  render(onSelectCar: Signal<ICar>, onRemoveCar: Signal<ICar>, cars: IPageCars) {
+  render(
+    onSelectCar: Signal<ICar>, 
+    onRemoveCar: Signal<ICar>, 
+    onStartCar: Signal<number>,
+    onStopCar: Signal<number>,
+    cars: IPageCars, 
+  ) {
     this.updateSubtitle(cars.pageNumber)
 
     if (this.list.length > 0) this.list.map(car => car.destroy())
 
     this.list = cars.page.map(car => {
-      return  new Car(this.node, 'garage__car', car, onSelectCar, onRemoveCar)
+      return  new Car(this.node, 'garage__car', car, onSelectCar, onRemoveCar, onStartCar, onStopCar)
     })
   }
 }
