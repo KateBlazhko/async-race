@@ -15,7 +15,6 @@ class Input extends Control<HTMLInputElement> {
     if (disable !== undefined) {
       this.node.disabled = disable
     }
-
   }
 
   

@@ -1,6 +1,6 @@
-import { IStateData }from './appState'
+import { IDataState }from './appState'
 
-export const initialState: IStateData = {
+export const initialState: IDataState = {
   settings: {
     create: {
       name: '',
@@ -14,7 +14,7 @@ export const initialState: IStateData = {
   selectCar: '',
   pageNumber: 1,
   pageLimit: 7,
-  currentPage: 1,
+  // currentPage: 1,
   carsCount: 0,
   pagesCount: 1,
 }

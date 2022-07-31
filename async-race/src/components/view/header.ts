@@ -6,7 +6,7 @@ class Header extends Control {
     super(parent, 'header', className);
 
     pages.map((page) => {
-      const button = new Control<HTMLLinkElement>(this.node, 'a', 'button');
+      const button = new Control<HTMLLinkElement>(this.node, 'a', 'button button_header');
       button.node.href = `#${page.hash}`;
       button.node.innerText = page.hash;
     });

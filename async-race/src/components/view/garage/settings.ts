@@ -4,6 +4,14 @@ import Button from '../button'
 import { ICar, ISettings } from '../../state/appState'
 import Signal from '../../common/signal';
 
+enum ButtonText {
+  race = "Race",
+  reset = "Reset",
+  generate = "Generate cars",
+  stop = "Stop",
+  create = "Create",
+  update = "Update"
+}
 
 class Settings extends Control {
   public onGenerateCars: ()=> void
@@ -23,7 +31,7 @@ class Settings extends Control {
     const createField = new Control(this.node, 'div', 'settings__field field')
     this.createInputList = this.renderInputField(
       createField.node,
-      "Create",
+      ButtonText.create,
       inputParams.create,
       onCreateCar
     )
@@ -32,7 +40,7 @@ class Settings extends Control {
     const updateField = new Control(this.node, 'div', 'settings__field field')
      this.updateInputList = this.renderInputField(
       updateField.node,
-      'Update',
+      ButtonText.update,
       inputParams.update, 
       onUpdateCar,
       disable)
@@ -106,17 +114,17 @@ class Settings extends Control {
   }
 
   renderButton(buttons: Control) {
-    const buttonRace = new Button(buttons.node, 'button', 'Race')
+    const buttonRace = new Button(buttons.node, 'button', ButtonText.race)
     buttonRace.node.onclick = () => {
       this.onGenerateCars()
     }
 
-    const buttonReset = new Button(buttons.node, 'button', 'Reset', true)
+    const buttonReset = new Button(buttons.node, 'button', ButtonText.reset, true)
     buttonReset.node.onclick = () => {
       this.onGenerateCars()
     }
 
-    const buttonGenerateCars = new Button(buttons.node, 'button', 'Generate cars')
+    const buttonGenerateCars = new Button(buttons.node, 'button', ButtonText.generate)
     buttonGenerateCars.node.onclick = () => {
       this.onGenerateCars()
     }

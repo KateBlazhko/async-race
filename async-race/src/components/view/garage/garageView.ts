@@ -1,20 +1,34 @@
 import Control from '../../common/control';
 import Settings from './settings';
-import CarsList from './carsList'
-import { ICar } from '../../state/appState'
+import { ICar, ICarState, IPageCars } from '../../state/appState'
 import AppState from '../../state/appState';
 import AppController from '../../controller/appController';
 import Signal from '../../common/signal';
 import Button from '../button';
+import Car from './car';
+
+export type TrackData = {
+  [id: number]: [Control, number]
+}
+
+enum TextContent {
+  title = 'Garage (0)',
+  subtitle = 'Page#1',
+  prevButton = 'Prev',
+  nextButton = "Next"
+}
 
 class GarageView extends Control {
   private state: AppState
   private controller: AppController
   private settings: Settings;
-  private cars: CarsList;
+  private cars: Control;
   private pagination: Control;
   public name: string= 'garage'
   private paginationButtons: Button[]
+  private list: Car[]
+  private title: Control
+  private subtitle: Control
 
   constructor(parent: HTMLElement | null, className: string, state: AppState, controller: AppController) {
     super(parent, 'div', className);
@@ -25,17 +39,18 @@ class GarageView extends Control {
     this.settings = new Settings(
       this.node,
       'garage__settings settings',
-      this.state.stateData.settings,
+      this.state.dataState.settings,
       this.onCreateCar,
       this.onUpdateCar,
       selectedCar
     );
 
-    this.cars = new CarsList(
-      this.node,
-      'garage__cars-list',
-    );
+    this.list = []
+    this.title = new Control(this.node, 'h2', 'title title_h2', TextContent.title)
+    this.subtitle = new Control(this.node, 'h3', 'title title_h3', TextContent.subtitle)
 
+    this.cars = new Control(this.node, 'div', 'garage__cars-list');
+    
     this.paginationButtons = []
     this.pagination = new Control(this.node, 'div', 'garage__pagination')
 
@@ -46,15 +61,15 @@ class GarageView extends Control {
     public onRemoveCar = new Signal<ICar>()
     public onCreateCar = new Signal<Omit<ICar, 'id'>>()
     public onUpdateCar = new Signal<Omit<ICar, 'id'>>()
-    public onStopCar = new Signal<number>()
-    public onStartCar = new Signal<number>()
+    public onStartCar = new Signal<TrackData>()
+    public onStopCar = new Signal<TrackData>()
 
     public init() {
       this.initSettings()
 
       this.addToSignal()
       
-      this.renderCars()
+      this.getCars()
     }
 
     private initSettings() {
@@ -63,8 +78,25 @@ class GarageView extends Control {
       }
     }
 
-    public renderCars() {
+    public getCars() {
       this.controller.getCars()
+    }
+
+    public renderCars(cars: IPageCars) {
+      this.updateSubtitle(cars.pageNumber)
+  
+      if (this.list.length > 0) this.list.map(car => car.destroy())
+  
+      this.list = cars.page.map(car => {
+        return new Car(
+          this.cars.node, 
+          'garage__car', 
+          car, 
+          this.onSelectCar, 
+          this.onRemoveCar, 
+          this.onStartCar, 
+          this.onStopCar)
+      })
     }
 
     private renderPagination() {
@@ -73,17 +105,17 @@ class GarageView extends Control {
 
       const [prev, next] = this.controller.getButtonDisable()
 
-      const buttonPrev = new Button(this.pagination.node, 'button', 'Prev', prev)
+      const buttonPrev = new Button(this.pagination.node, 'button', TextContent.prevButton, prev)
       buttonPrev.node.onclick = () => {
-        this.controller.changePageNumber(this.state.stateData.pageNumber - 1)
+        this.controller.changePageNumber(this.state.dataState.pageNumber - 1)
         const [ prev ] = this.controller.getButtonDisable()
   
         buttonPrev.node.disabled = prev
       }
   
-      const buttonNext = new Button(this.pagination.node, 'button', 'Next', next)
+      const buttonNext = new Button(this.pagination.node, 'button', TextContent.nextButton, next)
       buttonNext.node.onclick = () => {
-        this.controller.changePageNumber(this.state.stateData.pageNumber + 1)
+        this.controller.changePageNumber(this.state.dataState.pageNumber + 1)
         const [ _prev, next ] = this.controller.getButtonDisable()
   
         buttonPrev.node.disabled = next
@@ -93,25 +125,40 @@ class GarageView extends Control {
 
     }
 
+    private updateTitle(carsCount: number) {
+      this.title.node.textContent = `Garage (${carsCount})`
+    }
+  
+    private updateSubtitle(ageNumber: number){
+      this.subtitle.node.textContent = `Page#${ageNumber}`
+  
+    }
+
+    private updateButton(carState: ICarState) {
+      const id = Object.keys(carState)
+      const cars = this.list.filter(car => id.includes(car.id.toString()))
+      cars.map(car => {
+        const id = car.id
+        car.updateButtonEngine(carState[id])
+      })
+    }
+
     private addToSignal() {
       if (this.settings && this.cars) {
         this.onCreateCar.add(this.controller.createCar.bind(this.controller))
         this.onUpdateCar.add(this.controller.updateCar.bind(this.controller))
         this.onSelectCar.add(this.controller.selectCar.bind(this.controller))
         this.onSelectCar.add(this.settings.changeInputsUpdate.bind(this.settings))
-        this.onStartCar.add(this.controller.switchEngine.bind(this.controller, 'started'))
-        this.onStopCar.add(this.controller.switchEngine.bind(this.controller, 'stopped'))
-
         this.onRemoveCar.add(this.controller.removeCar.bind(this.controller))
-        this.state.onGetCars.add(this.cars.render.bind(
-          this.cars, 
-          this.onSelectCar, 
-          this.onRemoveCar,
-          this.onStartCar,
-          this.onStopCar,
-        ))
+
+        this.onStartCar.add(this.controller.startEngine.bind(this.controller))
+        this.onStopCar.add(this.controller.stopEngine.bind(this.controller))
+
+        this.state.onGetCars.add(this.renderCars.bind(this))
         this.state.onGetCarsCount.add(this.renderPagination.bind(this))
-        this.state.onGetCarsCount.add(this.cars.updateTitle.bind(this.cars))
+        this.state.onGetCarsCount.add(this.updateTitle.bind(this))
+        this.state.onChangeCarState.add(this.updateButton.bind(this))
+
         this.settings.onInputChange.add(this.controller.inputChange.bind(this.controller))
       }
     }

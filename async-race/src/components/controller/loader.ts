@@ -3,6 +3,8 @@ enum Status {
   'Created' = 201,
   'Bad request' = 400,
   'Not Found' = 404,
+  "TOO MANY REQUESTS" = 429,
+  'INTERNAL SERVER ERROR' = 500
 }
 
 export type RespObject = {
@@ -22,10 +24,10 @@ class Loader {
   ) {
 
     try {
-      const method = 'DeLETE';
+      const method = 'DELETE';
 
       const response = await fetch(this.makeUrl(options), { method });
-      const checkRespose: Response = Loader.errorHandler(response, Status.OK);
+      const checkRespose = Loader.errorHandler(response, Status.OK);
 
       if (checkRespose) {
         return true
@@ -45,7 +47,7 @@ class Loader {
       const method = 'PUT';
 
       const response = await fetch(this.makeUrl(options), { method, headers, body});
-      const checkRespose: Response = Loader.errorHandler(response, Status.OK);
+      const checkRespose = Loader.errorHandler(response, Status.OK);
 
       if (checkRespose) {
         return true
@@ -57,7 +59,7 @@ class Loader {
 
   public async patch<Data>(
     options: RespObject,
-    headers: Record<string, string>,
+    headers?: Record<string, string>,
     body?: string
   ) {
 
@@ -65,9 +67,12 @@ class Loader {
       const method = 'PATCH';
 
       const response = await fetch(this.makeUrl(options), { method, headers, body});
-      const checkRespose: Response = Loader.errorHandler(response, Status.OK);
-
+      const checkRespose= Loader.errorHandler(response, Status.OK);
       if (checkRespose) {
+
+        if (typeof checkRespose === 'string') 
+          return checkRespose
+
         const data = response.json() as Promise<Data>;
         return data
       }
@@ -86,7 +91,7 @@ class Loader {
       const method = 'POST';
 
       const response = await fetch(this.makeUrl(options), { method, headers, body});
-      const checkRespose: Response = Loader.errorHandler(response, Status.Created);
+      const checkRespose = Loader.errorHandler(response, Status.Created);
 
       if (checkRespose) {
         return true
@@ -103,7 +108,7 @@ class Loader {
   ) {
 
     try {
-      const result = await Promise.all(bodyArray.map(item => 
+      await Promise.all(bodyArray.map(item => 
         this.post(options, headers, item)
       ))
 
@@ -119,7 +124,7 @@ class Loader {
     try {
       const method = 'GET';
       const response = await fetch(this.makeUrl(options), { method });
-      const checkRespose: Response = Loader.errorHandler(response, Status.OK);
+      const checkRespose = Loader.errorHandler(response, Status.OK);
 
       if (checkRespose) {
         const data = response.json() as Promise<Data>;
@@ -134,20 +139,21 @@ class Loader {
     try {
       const method = 'GET';
       const response = await fetch(this.makeUrl(options), { method });
-      const checkRespose: Response = Loader.errorHandler(response, Status.OK);
+      const checkRespose: Response | string = Loader.errorHandler(response, Status.OK);
 
-      if (checkRespose) {
+      if (checkRespose) 
         return  response.headers.get(headersName)
 
-      }
     } catch {
       (err: Error) => console.error(err);
     }
   }
 
-  private static errorHandler(res: Response, status: number): Response {
+  private static errorHandler(res: Response, status: number): Response | string {
     if (!(res.status === status)) {
-      if (res.status === Status['Not Found']) {
+      if(res.status === Status["INTERNAL SERVER ERROR"])
+        return 'stop'
+      if (res.status in Status) {
         console.log(
           `Sorry, but there is ${res.status} error: ${res.statusText}`,
         );
