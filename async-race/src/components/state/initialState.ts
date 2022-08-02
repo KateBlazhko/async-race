@@ -1,6 +1,6 @@
-import { IDataState }from './appState'
+import { IGarageState }from './appState'
 
-export const initialState: IDataState = {
+export const initialState: IGarageState = {
   settings: {
     create: {
       name: '',
@@ -17,4 +17,5 @@ export const initialState: IDataState = {
   // currentPage: 1,
   carsCount: 0,
   pagesCount: 1,
+  // winners: {}
 }

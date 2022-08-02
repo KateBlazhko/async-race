@@ -1,8 +1,9 @@
 import AppLoader from './appLoader';
-import AppState, { ICar, ISettings, IRaceData } from '../state/appState'
+import AppState, { ICar, ISettings, IEngineData, ICarState } from '../state/appState'
 import { carBrand, carModal } from '../state/dataCars'
 import { TrackData } from '../view/garage/garageView';
 import Control from '../common/control';
+import Car from '../view/garage/car';
 
 interface IAnimationFrames {
   [id: number]: number
@@ -16,25 +17,34 @@ enum StatusEngine {
 
 class AppController {
   private loader: AppLoader
-  private animationFrames: IAnimationFrames
-  // private carState: ICarState
+  private animationFrames: IAnimationFrames;
+  private _carState: ICarState
+
+  set carState(value: ICarState) {
+    this._carState = value
+    this.checkRaceState()
+  }
+  get carState() {
+    return this._carState
+  }
+
   constructor(private state: AppState) {
     this.state = state
     this.loader = new AppLoader();
     this.animationFrames = {}
-    // this.carState = {}
+    this._carState = this.state.carState
   }
 
   public async getCars() {
     const endpoint: string = '/garage';
-    const dataState = this.state.dataState
-    const pageNumber = dataState.pageNumber
+    const garageState = this.state.garageState
+    const pageNumber = garageState.pageNumber
 
     const data = await this.loader.get({ 
       endpoint,
       gueryParams: {
           _page: pageNumber,
-          _limit: dataState.pageLimit,
+          _limit: garageState.pageLimit,
       },
     }) as ICar[];
 
@@ -47,8 +57,8 @@ class AppController {
 
       } else {
         if (pageNumber - 1 > 0) {
-          this.state.dataState = { 
-            ...this.state.dataState,
+          this.state.garageState = { 
+            ...this.state.garageState,
             pageNumber: pageNumber - 1
           }
           
@@ -62,12 +72,12 @@ class AppController {
 
   public async getCountCars() {
     const endpoint: string = '/garage';
-    const dataState = this.state.dataState
+    const garageState = this.state.garageState
 
     const data = await this.loader.getHeaderValue({
       endpoint,
       gueryParams: {
-        _limit: dataState.pageLimit,
+        _limit: garageState.pageLimit,
       },
     }, 'X-Total-Count') 
 
@@ -127,9 +137,9 @@ class AppController {
   }
  
   public async updateCar(car: Omit<ICar, 'id'>) {
-    const dataState = this.state.dataState
+    const garageState = this.state.garageState
 
-    const endpoint: string = '/garage' + `/${this.state.dataState.selectCar}`;
+    const endpoint: string = '/garage' + `/${this.state.garageState.selectCar}`;
 
     const headers = {'Content-Type': 'application/json'}
     const body = JSON.stringify(car)
@@ -142,50 +152,93 @@ class AppController {
     if(result) {
       this.getCars()
 
-      this.state.dataState = {
-        ...dataState,
+      this.state.garageState = {
+        ...garageState,
         selectCar: ''
       }
     }
   }
 
-//TODO remove from winners
-  public async removeCar(car: ICar) {
-    const dataState = this.state.dataState
+  public async startRace(carList: Car[]) {
 
-    const endpoint: string = '/garage' + `/${car.id}`;
+    const [ car ] = carList
+    const trackLenght = car.getTrackLength()
+    
+    this.state.winner = await Promise.any(carList.map(async (car) => {
+      const trackData: TrackData = {
+        [car.id]: [car.image, trackLenght]
+      }
+      const resultCar = await this.startEngine(trackData)
+      if (resultCar === undefined) throw Error ("Car is broken")
+      return {[car.name]: (resultCar / 1000).toFixed(1)}
+    }))
+  }
 
-    const result = await this.loader.delete(
-      { endpoint, gueryParams: {} }
-    )
+  public async resetRace(carList: Car[]) {
 
-    if(result) {
-      this.getCars()
-    }
+    const [ car ] = carList
+    const trackLenght = car.getTrackLength()
+
+    carList.map((car) => {
+      const trackData: TrackData = {
+        [car.id]: [car.image, trackLenght]
+      }
+      return this.stopEngine(trackData)
+    })
+
   }
 
   public async startEngine(trackData: TrackData) {
     const [ id ]= Object.keys(trackData)
     const [ track ]= Object.values(trackData)
-    // const isDriving = this.carState[+id]
-
     const endpoint: string = '/engine';
     const headers = {'Content-Type': 'application/json'}
-    const result = await this.loader.patch(
-      { endpoint, gueryParams: 
-        {
-        id: id,
-        status: StatusEngine.start
-        }
-      },
-      headers
-    ) as IRaceData
 
-    if (result)  {
-      this.countAnimationTime(result, +id, ...track)
-      this.toDriveMode(+id)
-    }  
+    try {
+      const result = await this.loader.patch(
+        { endpoint, gueryParams: 
+          {
+          id: id,
+          status: StatusEngine.start
+          }
+        },
+        headers
+      ) as IEngineData
+  
 
+      const timeMoving = this.countAnimationTime(result, +id, ...track)
+      return await this.toDriveMode(timeMoving, +id) 
+
+    } catch (e: unknown) {
+      const error = e as Error
+      console.error(error.message)
+    }
+    
+  }
+
+  private async toDriveMode(timeMoving: number, id: number) {
+    const endpoint: string = '/engine';
+
+    try {
+      const result = await this.loader.patch(
+        { endpoint, gueryParams: 
+          {
+          id: id,
+          status: StatusEngine.drive
+          }
+        })
+  
+      if (result === 'stop') {
+        this.stopAnimation(id)
+        throw Error(`Car#${id} is broken`)
+      }
+
+      return timeMoving
+  
+    } catch (e: unknown) { 
+      const error = e as Error
+      console.error(error.message)
+    }
   }
 
   public async stopEngine(trackData: TrackData) {
@@ -204,30 +257,30 @@ class AppController {
           }
         },
         headers
-      ) as IRaceData
+      ) as IEngineData
   
       if (result)  {  
         this.stopAnimation(+id)
       }  
     }
-
     const [ car ] = track
     this.resetCarPosition(+id, car)
   }
 
 
-  private countAnimationTime(data: IRaceData, id: number, car: Control, length: number) {
+  private countAnimationTime(data: IEngineData, id: number, car: Control, length: number) {
+    const MAXCARSIZE = 0.18
+
     const timeMoving = Math.round(data.distance / data.velocity)
-    const distance = ((length - car.node.clientWidth) * 100) / length
+    const carSize = car.node.clientWidth || (length * MAXCARSIZE)
+    const distance = ((length - carSize) * 100) / length
 
     this.animateCar(timeMoving, distance, car, id)
+    return timeMoving
   }
 
   private animateCar(timeMoving: number, distance: number, car: Control, id: number) {
-    this.state.carState = {
-      ...this.state.carState,
-      [id]: true
-    }
+    this.addCarState(id, true)
 
     car.node.style.left = '0'
     const start = new Date().getTime()
@@ -252,60 +305,59 @@ class AppController {
     this.animationFrames[id] = window.requestAnimationFrame(animate)
   }
 
-  private async toDriveMode(id: number) {
-    const endpoint: string = '/engine';
-
-    const result = await this.loader.patch(
-      { endpoint, gueryParams: 
-        {
-        id: id,
-        status: StatusEngine.drive
-        }
-      })
-
-    if(result === 'stop') {
-      this.stopAnimation(id)
-    }
-  }
-
   private stopAnimation(id: number) {
-    this.state.carState = {
-      ...this.state.carState,
-      [id]: false
-    }
+    // this.addCarState(id, false)
     window.cancelAnimationFrame(this.animationFrames[id])
   }
 
   private resetCarPosition(id: number, car: Control) {
     car.node.style.left = "0%"
+    this.addCarState(id, false)
+
     delete this.state.carState[id]
+
+    this.carState = this.state.carState
+  }
+
+  public async removeCar(car: ICar) {
+    const garageState = this.state.garageState
+
+    const endpoint: string = '/garage' + `/${car.id}`;
+
+    const result = await this.loader.delete(
+      { endpoint, gueryParams: {} }
+    )
+
+    if(result) {
+      this.getCars()
+    }
   }
 
   public selectCar(car: ICar) {
-    const dataState = this.state.dataState
+    const garageState = this.state.garageState
 
-    this.state.dataState = {
-      ...dataState,
+    this.state.garageState = {
+      ...garageState,
       selectCar: car.id
     }
   }
 
   public getSelectedCar() {
-    return this.state.dataState.selectCar
+    return this.state.garageState.selectCar
   }
  
   public inputChange(input: Omit<ISettings, 'create' | 'update'>) {
-    const dataState = this.state.dataState
+    const garageState = this.state.garageState
 
     const [ key ] = Object.keys(input) as Array<keyof ISettings>
     const [ value ]: Array<Record<string, string>>= Object.values(input)
 
-    this.state.dataState = {
-      ...dataState,
+    this.state.garageState = {
+      ...garageState,
       settings: {
-        ...dataState.settings,
+        ...garageState.settings,
         [key]: {
-          ...dataState.settings[key],
+          ...garageState.settings[key],
           ...value
         },
       }
@@ -313,8 +365,8 @@ class AppController {
   }
 
   public getButtonDisable() {
-    const pageNumber = this.state.dataState.pageNumber
-    const pagesCount = this.state.dataState.pagesCount
+    const pageNumber = this.state.garageState.pageNumber
+    const pagesCount = this.state.garageState.pagesCount
     const next = (pageNumber + 1 <= pagesCount) ? false : true
     const prev = (pageNumber - 1 >= 1) ? false : true
 
@@ -322,15 +374,39 @@ class AppController {
   }
 
   public changePageNumber(pageNumber: number){
-    const dataState = this.state.dataState
+    const garageState = this.state.garageState
 
-    this.state.dataState = {
-      ...dataState,
+    this.state.garageState = {
+      ...garageState,
       pageNumber: pageNumber
     }
 
     this.getCars()
   }
-}
+
+  private addCarState(id: number, isDriving: boolean) {
+    this.state.carState = {
+      ...this.state.carState,
+      [id]: isDriving
+    }
+
+    this.carState = this.state.carState
+  }
+
+  private checkRaceState() {
+    const maxCars = this.state.garageState.pageLimit
+
+    if (Object.keys(this.carState).length > 0) {
+      this.state.raceState = {
+        race: true
+      }
+    }
+    if (Object.keys(this.carState).length === 0) {
+      this.state.raceState = {
+        race: false
+      }
+    }
+  }
+ }
 
 export default AppController;

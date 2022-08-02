@@ -3,6 +3,9 @@ html {
   --main-text-color: #7f7fe0;
   --button-text-color: #ffffff;
   --button-disable-color: #949494;
+  --blackout: rgba(41, 41, 41, 0.6);
+
+  --car-width: 18%;
 
   font-size: 10px;
   
@@ -28,6 +31,7 @@ button {
   padding: 0;
 }
 
+body,
 h1,
 h2,
 h3,
@@ -35,8 +39,8 @@ h4,
 h5,
 p {
   margin: 0;
-
 }
+
 
 .button {
   height: 2rem;
@@ -152,16 +156,29 @@ p {
 
 }
 
-.garage__image {
+.garage__image-car {
   position: absolute;
   left: 0;
   top: 0;
-  width: 18%;
+  width: var(--car-width);
+
+  transition: left 0.1s linear;
 }
 
-.svg {
+.garage__image-flag{
+  position: absolute;
+  left: calc(100% - var(--car-width));
+  top: 0;
+}
+
+.svg_car {
   width: 7.5rem;
   height: 3.5rem;
+}
+
+.svg_flag {
+  width: 2rem;
+  height: 3rem;
 }
 
 @media (max-width: 767px) {
@@ -229,3 +246,53 @@ color: var(--main-text-color);
 .rs:hover ~ .rs__logo {
   background-color: var(--main-bg-color);
 }
+
+.notification__overlay {
+	position: fixed;
+  top: 0;
+	left: 0;
+	z-index: 3;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+	width: 100%;
+	height: 100vh;
+
+	background-color: var(--blackout);
+
+	opacity: 0;
+	animation: Change-opacity 1s;
+	animation-fill-mode: forwards;
+	animation-direction: normal;}
+
+.notification__inner {
+	display: flex;
+  justify-content: center;
+  align-items: center;
+	width: 30rem;
+	height: 10rem;
+	border-radius: 5px;
+
+	background-color: var(--main-bg-color)
+}
+
+.notification__text {
+  font-size: 3rem;
+  color: var(--button-text-color);
+  text-align: center
+  
+}
+
+@keyframes Change-opacity {
+  0% {
+      opacity: 0;
+  }
+100% {
+      opacity: 1;
+  }
+}
+
+
+

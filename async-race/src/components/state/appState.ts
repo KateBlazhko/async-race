@@ -8,7 +8,7 @@ export interface ICar {
   id: number
 }
 
-export interface IRaceData {
+export interface IEngineData {
   "velocity": number,
   "distance": number
 }
@@ -18,7 +18,7 @@ export interface IPageCars {
   pageNumber: number
 }
 
-export interface IDataState {
+export interface IGarageState {
   settings: ISettings,
   selectCar: string | number,
   pageNumber: number,
@@ -26,6 +26,7 @@ export interface IDataState {
   // currentPage: number,
   carsCount: number
   pagesCount: number
+  // winners: Record<number, number>
 }
 
 export interface ISettings {
@@ -39,20 +40,26 @@ export interface ISettings {
   }
 }
 
+
 export interface ICarState {
   [id: number]: boolean
+}
+
+export interface IRaceState {
+  race: boolean
 }
 
 class AppState {
   private _pageCars: IPageCars;
   private _carsCount: number;
-  private _dataState: IDataState
+  private _garageState: IGarageState
   private _carState: ICarState
+  private _raceState: IRaceState
+  private _winner: Record<string, string>
 
   get pageCars() {
     return this._pageCars;
   }
-
   set pageCars(value: IPageCars) {
     this._pageCars = value;
 
@@ -62,14 +69,13 @@ class AppState {
   get carsCount() {
     return this._carsCount;
   }
-
   set carsCount(value: number) {
     this._carsCount = value;
 
-    const pagesCount = Math.ceil(this._carsCount / this.dataState.pageLimit)
+    const pagesCount = Math.ceil(this._carsCount / this.garageState.pageLimit)
 
-    this.dataState = {
-      ...this.dataState,
+    this.garageState = {
+      ...this.garageState,
       carsCount: this._carsCount,
       pagesCount: pagesCount
     }
@@ -77,31 +83,59 @@ class AppState {
     this.onGetCarsCount.emit(this._carsCount);
   }
 
-  get dataState() {
-    return this._dataState;
+  get garageState() {
+    return this._garageState;
   }
-
-  set dataState(value: IDataState) {
-    this._dataState = value;
+  set garageState(value: IGarageState) {
+    this._garageState = value;
   }
 
   get carState() {
     return this._carState;
   }
-
   set carState(value: ICarState) {
     this._carState = value;
     this.onChangeCarState.emit(this._carState)
   }
 
+  get raceState() {
+    return this._raceState;
+  }
+  set raceState(value: IRaceState) {
+    this._raceState = value;
+    this.onChangeRaceState.emit(this._raceState)
+  }
+
+  get winner() {
+    return this._winner;
+  }
+  set winner(value: Record<string, string>) {
+    this._winner = value;
+    // this.garageState = {
+    //   ...this.garageState,
+    //   winners: {
+    //     ...this.garageState.winners,
+    //     ...value
+    //   }
+    // }
+
+
+    this.onShowWinner.emit(this._winner)
+
+  }
+
   constructor() {
-    this._dataState = initialState
-    this._carsCount = this._dataState.carsCount
+    this._garageState = initialState
+    this._carsCount = this._garageState.carsCount
+    this._winner = {}
     this._carState = {}
+    this._raceState = {
+      race: false
+    }
 
     this._pageCars = {
       page: [],
-      pageNumber: this._dataState.pageNumber
+      pageNumber: this._garageState.pageNumber
     }
 
   }
@@ -109,7 +143,8 @@ class AppState {
   public onGetCars = new Signal<IPageCars>();
   public onGetCarsCount = new Signal<number>();
   public onChangeCarState = new Signal<ICarState>();
-
+  public onChangeRaceState = new Signal<IRaceState>();
+  public onShowWinner = new Signal<Record<string, string>>();
 
   public static checkCars(data: ICar[]) {
     return data.every(car => {
@@ -120,7 +155,7 @@ class AppState {
     })
   }
 
-  public static checkRaceData(data: IRaceData) {
+  public static checkRaceData(data: IEngineData) {
     if (!(data.velocity && typeof data.velocity === 'number')) throw new Error('Velocity is not number');
     if (!(data.distance && typeof data.distance === 'number')) throw new Error('Distance is not number');
     return true

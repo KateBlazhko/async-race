@@ -152,7 +152,9 @@ class Loader {
   private static errorHandler(res: Response, status: number): Response | string {
     if (!(res.status === status)) {
       if(res.status === Status["INTERNAL SERVER ERROR"])
+      console.log(res.statusText)
         return 'stop'
+
       if (res.status in Status) {
         console.log(
           `Sorry, but there is ${res.status} error: ${res.statusText}`,

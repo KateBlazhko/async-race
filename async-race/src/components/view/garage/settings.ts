@@ -1,7 +1,7 @@
 import Control from '../../common/control';
 import Input from '../input'
 import Button from '../button'
-import { ICar, ISettings } from '../../state/appState'
+import { ICar, IRaceState, ISettings } from '../../state/appState'
 import Signal from '../../common/signal';
 
 enum ButtonText {
@@ -15,9 +15,13 @@ enum ButtonText {
 
 class Settings extends Control {
   public onGenerateCars: ()=> void
+  public onRace: ()=> void
+  public onReset: ()=> void
   private createInputList: Control<HTMLInputElement | HTMLButtonElement>[]
   private updateInputList: Control<HTMLInputElement | HTMLButtonElement>[]
-
+  private buttonsControl: Control
+  private buttonsList: Control[]
+ 
   constructor(
     parent: HTMLElement | null,
     className: string,
@@ -28,6 +32,9 @@ class Settings extends Control {
   ){
     super(parent, 'div', className);
     this.onGenerateCars = () => {}
+    this.onRace = () => {}
+    this.onReset = () => {}
+
     const createField = new Control(this.node, 'div', 'settings__field field')
     this.createInputList = this.renderInputField(
       createField.node,
@@ -45,8 +52,8 @@ class Settings extends Control {
       onUpdateCar,
       disable)
     
-    const buttons = new Control(this.node, 'div', 'settings__buttons')
-    this.renderButton(buttons)
+    this.buttonsControl = new Control(this.node, 'div', 'settings__buttons')
+    this.buttonsList = this.renderButton(false)
   }
   public onInputChange = new Signal<Omit<ISettings, 'create' | 'update'>>()
 
@@ -113,21 +120,33 @@ class Settings extends Control {
       this.updateInputList.map(input => input.node.disabled = true)
   }
 
-  renderButton(buttons: Control) {
-    const buttonRace = new Button(buttons.node, 'button', ButtonText.race)
+  private renderButton(isRace: boolean) {
+    const buttonRace = new Button(this.buttonsControl.node, 'button', ButtonText.race, isRace)
     buttonRace.node.onclick = () => {
-      this.onGenerateCars()
+      this.onRace()
+      buttonRace.node.disabled = true
     }
 
-    const buttonReset = new Button(buttons.node, 'button', ButtonText.reset, true)
+    const buttonReset = new Button(this.buttonsControl.node, 'button', ButtonText.reset, !isRace)
     buttonReset.node.onclick = () => {
-      this.onGenerateCars()
+      this.onReset()
+      buttonRace.node.disabled = true
+
     }
 
-    const buttonGenerateCars = new Button(buttons.node, 'button', ButtonText.generate)
+    const buttonGenerateCars = new Button(this.buttonsControl.node, 'button', ButtonText.generate)
     buttonGenerateCars.node.onclick = () => {
       this.onGenerateCars()
     }
+
+    return [buttonRace, buttonReset, buttonGenerateCars]
+  }
+
+  public updateButtons(raceState: IRaceState) {
+    const isRace = raceState.race
+    this.buttonsList.map(button => button.destroy())
+
+    this.buttonsList = this.renderButton(isRace)
   }
 
 }

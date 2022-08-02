@@ -14,93 +14,110 @@ enum ButtonText {
 }
 
 class Car extends Control {
-  public containerImage: Control;
-  private car: ICar;
+  public track: Control;
+  private _image: Control
   private _id: Readonly<number>
-  private buttonStart: Button
-  private buttonStop: Button
+  private _name: Readonly<string>
+  private buttonsEngine: Button
+  private buttonsEngineList: Button[]
+  // private buttonStart: Button
+  // private buttonStop: Button
 
   get id() {
     return this._id
   }
+  get name() {
+    return this._name
+  }
+  get image() {
+    return this._image
+  }
   // public id: Readonly<number>
   
   constructor(
-    parent: HTMLElement | null, 
-    className: string, 
-    car: ICar, 
-    onSelectCar: Signal<ICar>,
-    onRemoveCar: Signal<ICar>,
-    onStartCar: Signal<TrackData>,
-    onStopCar: Signal<TrackData>,
-    ){
+    public parent: HTMLElement | null, 
+    public className: string, 
+    private car: ICar, 
+    private onSelectCar: Signal<ICar>,
+    private onRemoveCar: Signal<ICar>,
+    private onStartCar: Signal<TrackData>,
+    private onStopCar: Signal<TrackData>,
+  ){
     super(parent, 'div', className);
 
     this.car = car
     this._id = this.car.id
+    this._name = this.car.name
+    this.onStartCar = onStartCar
+    this.onRemoveCar = onRemoveCar
+    this.onStartCar = onStartCar
+    this.onStopCar = onStopCar
+
 
     const buttonsControl = new Control(this.node, 'div', 'garage__button-wrap double')
-    this.renderButtonsControl(buttonsControl, onSelectCar, onRemoveCar)
+    this.renderButtonsControl(buttonsControl)
     
-    new Control(this.node, 'span', 'garage__name', car.name)
+    new Control(this.node, 'span', 'garage__name', car.name + car.id)
 
-    const buttonsEngine = new Control(this.node, 'div', 'garage__button-wrap')
-    this.buttonStart = new Button(buttonsEngine.node, 'button button_car', ButtonText.start)
-    this.buttonStop = new Button(buttonsEngine.node, 'button button_car', ButtonText.stop, true)
+    this.buttonsEngine = new Control(this.node, 'div', 'garage__button-wrap')
 
-    this.containerImage = new Control(this.node, 'div', 'garage__track')
-
-    this.renderButtonsEngine(onStartCar, onStopCar, this.renderImage(car))
+    this.track = new Control(this.node, 'div', 'garage__track')
+    
+    this._image = this.renderImage(car)
+    this.buttonsEngineList = this.renderButtonsEngine(false)
   }
 
-  renderButtonsControl(wrap: Control, onSelectCar: Signal<ICar>, onRemoveCar: Signal<ICar>) {
+  renderButtonsControl(wrap: Control) {
     const buttonSelect = new Button(wrap.node, 'button button_car', ButtonText.select)
     buttonSelect.node.onclick = () => {
-      onSelectCar.emit(this.car)
+      this.onSelectCar.emit(this.car)
     }
 
     const buttonRemove = new Button(wrap.node, 'button button_car', ButtonText.remove)
     buttonRemove.node.onclick = () => {
-      onRemoveCar.emit(this.car)
+      this.onRemoveCar.emit(this.car)
     }
   }
 
-  renderButtonsEngine(
-    onStartCar: Signal<TrackData>, 
-    onStopCar: Signal<TrackData>,
-    image: Control
-  ) {
+  renderButtonsEngine(isDriving: boolean) {
     const id = this.id
 
-    this.buttonStart.node.onclick = () => {
-      onStartCar.emit({[id]: [image, this.getTrackLength()]})
-      this.buttonStart.node.disabled = true
+    const buttonStart = new Button(this.buttonsEngine.node, 'button button_car', ButtonText.start, isDriving)
+    const buttonStop = new Button(this.buttonsEngine.node, 'button button_car', ButtonText.stop, !isDriving)
+
+    buttonStart.node.onclick = () => {
+      this.onStartCar.emit({[id]: [this.image, this.getTrackLength()]})
+      buttonStart.node.disabled = true
     }
 
-    this.buttonStop.node.onclick = () => {
-      onStopCar.emit({[id]: [image, this.getTrackLength()]})
-      this.buttonStop.node.disabled = true
+    buttonStop.node.onclick = () => {
+      this.onStopCar.emit({[id]: [this.image, this.getTrackLength()]})
+      buttonStop.node.disabled = true
     }
+
+    return [buttonStart, buttonStop]
   }
 
   public renderImage(car: ICar) {
-    const carImage = new Control(this.containerImage.node, 'div', 'garage__image')
-    const image = new SVG(carImage.node, 'svg', svg + '#car')
+    const flagContainer = new Control(this.track.node, 'div', 'garage__image-flag')
+    const flag = new SVG(flagContainer.node, 'svg_flag', svg + '#flag')
+    flag.setColor(car.color)
+
+    const imageContainer = new Control(this.track.node, 'div', 'garage__image-car')
+    const image = new SVG(imageContainer.node, 'svg_car', svg + '#car')
     image.setColor(car.color)
-    return carImage
+    return imageContainer
   }
 
   public getTrackLength() {
-    return this.containerImage.node.clientWidth
+    return this.track.node.clientWidth
   }
 
   public updateButtonEngine(state: boolean) {
     const isDriving = state
-    if(isDriving)
-      this.buttonStop.node.disabled = false
-    else 
-      this.buttonStart.node.disabled = false
+    this.buttonsEngineList.map(button => button.destroy())
 
+    this.buttonsEngineList = this.renderButtonsEngine(isDriving)
   }
 }
 
