@@ -3,6 +3,8 @@ import Input from '../input'
 import Button from '../button'
 import { ICar, IRaceState, ISettings } from '../../state/appState'
 import Signal from '../../common/signal';
+import SVG from '../../common/svgElement';
+import svg from '../../../assets/sprite.svg'
 
 enum ButtonText {
   race = "Race",

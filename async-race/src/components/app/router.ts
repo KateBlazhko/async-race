@@ -1,20 +1,33 @@
 import App, { Page } from './app';
-// import AppView, { Page } from './app'
-
-interface MatchPage {
-  route: Page,
-  result: RegExpMatchArray;
-}
 
 class Router {
-  constructor(private app: App) {
+  private hash: string
+
+  constructor(
+    private app: App, 
+    private pages: Page[]
+  ) {
     this.app = app;
+    this.hash = window.location.hash.slice(1)
+    this.pages = pages
+  }
+
+  public getPage() {    
+    const route = this.pages.find((page) => page.hash === this.hash);
+
+    if (route) {
+     return route.view;
+    } else {
+      const [firstPage] = this.pages
+      return firstPage.view
+    }
+
   }
 
   public change() {
     window.addEventListener('hashchange', () => {
-      const hash = window.location.hash.slice(1);
-      this.app.createView(hash);
+      this.hash = window.location.hash.slice(1);
+      this.app.createView();
     });
   }
 }

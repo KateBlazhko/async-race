@@ -9,8 +9,8 @@ import { TrackData } from './garageView'
 enum ButtonText {
   select = "Select",
   remove = "Remove",
-  start = "Start",
-  stop = "Stop",
+  start = "A",
+  stop = "B",
 }
 
 class Car extends Control {
@@ -20,8 +20,6 @@ class Car extends Control {
   private _name: Readonly<string>
   private buttonsEngine: Button
   private buttonsEngineList: Button[]
-  // private buttonStart: Button
-  // private buttonStop: Button
 
   get id() {
     return this._id
@@ -32,7 +30,6 @@ class Car extends Control {
   get image() {
     return this._image
   }
-  // public id: Readonly<number>
   
   constructor(
     public parent: HTMLElement | null, 
@@ -82,8 +79,8 @@ class Car extends Control {
   renderButtonsEngine(isDriving: boolean) {
     const id = this.id
 
-    const buttonStart = new Button(this.buttonsEngine.node, 'button button_car', ButtonText.start, isDriving)
-    const buttonStop = new Button(this.buttonsEngine.node, 'button button_car', ButtonText.stop, !isDriving)
+    const buttonStart = new Button(this.buttonsEngine.node, 'button button_start', '', isDriving)
+    const buttonStop = new Button(this.buttonsEngine.node, 'button button_stop', '', !isDriving)
 
     buttonStart.node.onclick = () => {
       this.onStartCar.emit({[id]: [this.image, this.getTrackLength()]})
@@ -118,7 +115,10 @@ class Car extends Control {
     this.buttonsEngineList.map(button => button.destroy())
 
     this.buttonsEngineList = this.renderButtonsEngine(isDriving)
+
+    
   }
+
 }
 
 export default Car;

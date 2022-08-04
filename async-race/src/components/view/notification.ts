@@ -14,7 +14,7 @@ class Notification extends Control {
 
     new Control(container.node, 'span', "notification__text", notification)
 
-    setTimeout(() => this.onClose(), 1500);
+    // setTimeout(() => this.onClose(), 1500);
 
     overlay.node.onclick = () => {
       this.onClose();

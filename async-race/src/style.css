@@ -1,15 +1,33 @@
 html {
-  --main-bg-color: #7f7fe0;
-  --main-text-color: #7f7fe0;
+  --main-bg-color: #6F5643;
+  --main-text-color: #6F5643;
   --button-text-color: #ffffff;
-  --button-disable-color: #949494;
+  --button-bg-color: #D2A24C; 
+  --button-disable-color: #D2A24C80;
+  --button-hover-color: #6F5643;
+  --track-bg-color: rgba(255, 255, 255, 0.7);
+  --title-color: #6F5643;
   --blackout: rgba(41, 41, 41, 0.6);
+  --color1: #ECE6C2;
+  --color2: #D2A24C;
+  --color3: #CC6B49;
+  --color4: #6F5643;
+  --color5: #64a693;
+  --header-bg: url('./assets/header-bg.png');
+  --footer-bg: url('./assets/footer-bg.png');
 
   --car-width: 18%;
 
   font-size: 10px;
   
   scroll-behavior: smooth;
+}
+
+@font-face {
+  font-family: 'Carbon';
+  font-style: normal;
+  font-weight: normal;
+  src: url('./assets/carbon.ttf') format('truetype')
 }
 
 *,
@@ -41,33 +59,154 @@ p {
   margin: 0;
 }
 
+body {
+  font-family: 'Abril Fatface', cursive;
+  font-size: 1.8rem;
+
+  background-image: url('./assets/bg2.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
 
 .button {
-  height: 2rem;
-
+  height: 3rem;
   border: none;
-  color: var(--button-text-color);
 
-  background-color: var(--main-bg-color)
+  color: var(--button-text-color);
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.9rem;
+
+  background-color: var(--button-bg-color);
+  transition: all 0.5s;
+  cursor: pointer;
 }
 
 .button:disabled {
-  background-color: var(--button-disable-color)
+  background-color: var(--button-disable-color);
+  cursor: auto;
+}
+
+.button:not(:disabled):hover {
+  transform: translateY(-0.5rem);
+  background-color: var(--button-hover-color);
 }
 
 .button_car {
   width: 50%;
+
+  background-color: var(--color5);
+
+}
+
+.button_start {
+  width: 50%;
+  background-image: url('./assets/start.png');
+  background-size: 30%;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+
+.button_stop {
+  width: 50%;
+  background-image: url('./assets/stop.png');
+  background-size: 30%;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .button_header {
-  height: 3rem;
+  height: 5rem;
+
+  text-decoration: none;
+  text-align: center;
+
+  font-family: 'Abril Fatface', cursive;
+  font-size: 3.5rem;
+
+  background-color: var(--main-bg-color);
+}
+
+.button_header.header-garage {
+  transform: rotateZ(-5deg)
+}
+.button_header.header-winners {
+  transform: rotateZ(3deg)
+}
+
+.button_header.header-garage:hover {
+  transform: rotateZ(-5deg) translateY(-0.5rem);
+}
+
+.button_header.header-winners:hover {
+  transform: rotateZ(3deg) translateY(-0.5rem);
+}
+
+.title-wrap {
+  width: 100%;
+}
+
+
+.title {
+  position: relative;
 
   text-align: center;
-  text-decoration: none;
+  font-family: 'Oswald', sans-serif;
+  color: var(--title-color);
+}
+
+.title_h2 {
+  font-size: 4rem;
+}
+
+.title_h2:before {
+  content: " ";
+  position: absolute;
+  left: 50%;
+  width: 30%;
+  border-top: 4px solid var(--title-color);
+
+  transform: translateX(-50%);
+} 
+
+.title_h3 {
   font-size: 2rem;
 }
 
-.title {
+.title_h3:before {
+  content: " ";
+  position: absolute;
+  top:50%;
+  left: 35%;
+  width: 10%;
+  border-top: 4px solid var(--title-color);
+
+  transform: translateY(-50%);
+}
+
+.title_h3:after {
+  content: " ";
+  position: absolute;
+  top:50%;
+  left: 55%;
+  width: 10%;
+  border-top: 4px solid var(--title-color);
+
+  transform: translateY(-50%);
+}
+
+.pagination {
+  display: grid;  
+  grid-template-columns: minmax(7rem, 10%) minmax(7rem, 10%);
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.app {
   width: 100%;
 }
 
@@ -77,23 +216,24 @@ p {
   justify-content: space-between;
   gap: 30px;
 
-  height: 100vh;
+  height: 100%;
+  min-height: 100vh;
   width: 100%;
   max-width: 1920px;
   margin: 0 auto;
-  padding: 0 2rem;
+
 }
 
 .header {
   display: grid;
-  grid-template-columns: 15% 15%;
+  grid-template-columns: repeat(2, minmax(15rem, 30rem));
   justify-content: center;
-  gap: 10px;
+  column-gap: 3rem;
   width: 100%;
-}
+  padding: 3rem 4rem 4rem 4rem;
 
-.app {
-  width: 100%;
+  background-image: var(--header-bg);
+  background-size: contain;
 }
 
 .garage {
@@ -103,9 +243,11 @@ p {
 }
 
 .garage__settings {
+  position: relative;
   display: grid;
   gap: 1rem;
   width: 50%;
+  padding: 1rem;
 }
 
 .settings__field {
@@ -123,21 +265,23 @@ p {
   width: 100%;
 }
 
-.garage__cars-list {
+.garage__list {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
   width: 100%;
 }
 
 .garage__car {
   display: grid;
-  grid-template-columns: repeat(2, minmax(7rem, 10%)) 1fr;
+  grid-template-columns: repeat(2, minmax(6rem, 10%)) 1fr;
   grid-auto-rows: minmax(3.5rem, auto);
   row-gap: 1rem;
   column-gap: 0.5rem;
   width: 100%;
-  border-bottom: 2px dotted var(--main-bg-color);
+  padding: 1% 2% 0 2%;
+  border-bottom: 4px dashed var(--main-bg-color);
+
+  background-color: var(--track-bg-color);
 }
 
 .garage__button-wrap {
@@ -153,7 +297,6 @@ p {
 .garage__track {
   position: relative;
   grid-column: 2 / 4;
-
 }
 
 .garage__image-car {
@@ -169,6 +312,11 @@ p {
   position: absolute;
   left: calc(100% - var(--car-width));
   top: 0;
+}
+
+.garage__name {
+  font-family: 'Carbon';
+  color: var(--main-text-color);
 }
 
 .svg_car {
@@ -188,11 +336,16 @@ p {
   }
 }
 
-.garage__pagination {
-  display: grid;  
-  grid-template-columns: minmax(7rem, 10%) minmax(7rem, 10%);
-  gap: 0.5rem;
-  width: 100%;
+.winners__list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(15rem, auto));
+  grid-auto-rows: 3rem;
+
+}
+
+.winners__header {
+  color: var(--button-text-color);
+  background-color: var(--main-bg-color);
 }
 
 .footer {
@@ -206,6 +359,9 @@ p {
 
   color: var(--main-text-color);
   font-size: 1.6rem;
+
+  background-image: var(--footer-bg);
+  background-size: contain;
 }
 
 .text {
@@ -273,9 +429,11 @@ color: var(--main-text-color);
   align-items: center;
 	width: 30rem;
 	height: 10rem;
+  padding: 0 1rem;
 	border-radius: 5px;
 
-	background-color: var(--main-bg-color)
+
+	background-color: var(--color5)
 }
 
 .notification__text {

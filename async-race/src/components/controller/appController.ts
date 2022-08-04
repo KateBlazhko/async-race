@@ -1,5 +1,5 @@
 import AppLoader from './appLoader';
-import AppState, { ICar, ISettings, IEngineData, ICarState } from '../state/appState'
+import AppState, { ICar, ISettings, IEngineData, ICarState, IWinner, IGarageState, IWinnersState } from '../state/appState'
 import { carBrand, carModal } from '../state/dataCars'
 import { TrackData } from '../view/garage/garageView';
 import Control from '../common/control';
@@ -47,7 +47,6 @@ class AppController {
           _limit: garageState.pageLimit,
       },
     }) as ICar[];
-
     if (AppState.checkCars(data)) {
       if (data.length > 0) {
         this.state.pageCars = {
@@ -246,23 +245,22 @@ class AppController {
     const [ track ]= Object.values(trackData)
     const isDriving = this.state.carState[+id]
 
-    if (isDriving) {
-      const endpoint: string = '/engine';
-      const headers = {'Content-Type': 'application/json'}
-      const result = await this.loader.patch(
-        { endpoint, gueryParams: 
-          {
-          id: id,
-          status: StatusEngine.stop
-          }
-        },
-        headers
-      ) as IEngineData
-  
-      if (result)  {  
-        this.stopAnimation(+id)
-      }  
-    }
+    const endpoint: string = '/engine';
+    const headers = {'Content-Type': 'application/json'}
+    const result = await this.loader.patch(
+      { endpoint, gueryParams: 
+        {
+        id: id,
+        status: StatusEngine.stop
+        }
+      },
+      headers
+    ) as IEngineData
+
+    if (result)  {  
+      this.stopAnimation(+id)
+    }  
+
     const [ car ] = track
     this.resetCarPosition(+id, car)
   }
@@ -364,8 +362,8 @@ class AppController {
     }
   }
 
-  public getButtonDisable() {
-    const pageNumber = this.state.garageState.pageNumber
+  public getButtonDisable(state: IGarageState | IWinnersState) {
+    const pageNumber = state.pageNumber
     const pagesCount = this.state.garageState.pagesCount
     const next = (pageNumber + 1 <= pagesCount) ? false : true
     const prev = (pageNumber - 1 >= 1) ? false : true
@@ -406,6 +404,55 @@ class AppController {
         race: false
       }
     }
+  }
+
+  public async getWinners() {
+    const endpoint: string = '/winners';
+    const winnersState = this.state.winnersState
+    const pageNumber = winnersState.pageNumber
+
+    const data = await this.loader.get({ 
+      endpoint,
+      gueryParams: {
+          _page: pageNumber,
+          _limit: winnersState.pageLimit,
+      },
+    }) as IWinner[];
+
+    if (AppState.checkWinners(data)) {
+      if (data.length > 0) {
+        this.state.pageWinners = {
+          page: data,
+          pageNumber: pageNumber
+        }
+
+      } else {
+        if (pageNumber - 1 > 0) {
+          this.state.winnersState = { 
+            ...this.state.winnersState,
+            pageNumber: pageNumber - 1
+          }
+          
+          this.getWinners()
+        }
+      }
+    }
+
+    this.getCountWinners()
+  }
+
+  public async getCountWinners() {
+    const endpoint: string = '/winners';
+    const winnersState = this.state.winnersState
+
+    const data = await this.loader.getHeaderValue({
+      endpoint,
+      gueryParams: {
+        _limit: winnersState.pageLimit,
+      },
+    }, 'X-Total-Count') 
+
+    this.state.winnersCount =  Number(data) ? Number(data) : 0    
   }
  }
 

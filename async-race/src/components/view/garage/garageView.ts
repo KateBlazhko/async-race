@@ -7,14 +7,15 @@ import Signal from '../../common/signal';
 import Button from '../button';
 import Car from './car';
 import Notification from '../notification'
+import Pagination from '../pagination';
 
 export type TrackData = {
   [id: number]: [Control, number]
 }
 
 enum TextContent {
-  title = 'Garage (0)',
-  subtitle = 'Page#1',
+  title = 'Garage 0',
+  subtitle = '#1',
   prevButton = 'Prev',
   nextButton = "Next",
 }
@@ -24,9 +25,7 @@ class GarageView extends Control {
   private controller: AppController
   private settings: Settings;
   private cars: Control;
-  private pagination: Control;
-  public name: string= 'garage'
-  private paginationButtons: Button[]
+  private pagination: Pagination;
   private list: Car[]
   private title: Control
   private subtitle: Control
@@ -36,6 +35,10 @@ class GarageView extends Control {
     this.state = state
     this.controller = controller
 
+    const titleWrap = new Control(this.node, 'div', 'title-wrap')
+    this.title = new Control(titleWrap.node, 'h2', 'title title_h2', TextContent.title)
+    this.subtitle = new Control(titleWrap.node, 'h3', 'title title_h3', TextContent.subtitle)
+    
     const selectedCar = this.controller.getSelectedCar()
     this.settings = new Settings(
       this.node,
@@ -47,13 +50,10 @@ class GarageView extends Control {
     );
 
     this.list = []
-    this.title = new Control(this.node, 'h2', 'title title_h2', TextContent.title)
-    this.subtitle = new Control(this.node, 'h3', 'title title_h3', TextContent.subtitle)
 
-    this.cars = new Control(this.node, 'div', 'garage__cars-list');
+    this.cars = new Control(this.node, 'div', 'garage__list');
     
-    this.paginationButtons = []
-    this.pagination = new Control(this.node, 'div', 'garage__pagination')
+    this.pagination = new Pagination(this.node, 'pagination')
 
     this.init()
   }
@@ -87,6 +87,26 @@ class GarageView extends Control {
       }
     }
 
+    private initPagination() {
+      const initialSate = this.controller.getButtonDisable(this.state.garageState)
+
+      this.pagination.render(initialSate)
+
+      this.pagination.onPrev = (button: Button) => {
+        this.controller.changePageNumber(this.state.garageState.pageNumber - 1)
+        const [ prev ] = this.controller.getButtonDisable(this.state.garageState)
+  
+        button.node.disabled = prev
+      }
+
+      this.pagination.onNext = (button: Button) => {
+        this.controller.changePageNumber(this.state.garageState.pageNumber + 1)
+        const [ _prev, next ] = this.controller.getButtonDisable(this.state.garageState)
+  
+        button.node.disabled = next
+      }
+    }
+
     public getCars() {
       this.controller.getCars()
     }
@@ -108,38 +128,12 @@ class GarageView extends Control {
       })
     }
 
-    private renderPagination() {
-      if (this.paginationButtons && this.paginationButtons.length > 0) 
-        this.paginationButtons.map(button => button.destroy())
-
-      const [prev, next] = this.controller.getButtonDisable()
-
-      const buttonPrev = new Button(this.pagination.node, 'button', TextContent.prevButton, prev)
-      buttonPrev.node.onclick = () => {
-        this.controller.changePageNumber(this.state.garageState.pageNumber - 1)
-        const [ prev ] = this.controller.getButtonDisable()
-  
-        buttonPrev.node.disabled = prev
-      }
-  
-      const buttonNext = new Button(this.pagination.node, 'button', TextContent.nextButton, next)
-      buttonNext.node.onclick = () => {
-        this.controller.changePageNumber(this.state.garageState.pageNumber + 1)
-        const [ _prev, next ] = this.controller.getButtonDisable()
-  
-        buttonPrev.node.disabled = next
-      }
-
-      this.paginationButtons = [buttonPrev, buttonNext]
-
-    }
-
     private updateTitle(carsCount: number) {
-      this.title.node.textContent = `Garage (${carsCount})`
+      this.title.node.textContent = `Garage ${carsCount}`
     }
   
     private updateSubtitle(ageNumber: number){
-      this.subtitle.node.textContent = `Page#${ageNumber}`
+      this.subtitle.node.textContent = `#${ageNumber}`
   
     }
 
@@ -155,7 +149,7 @@ class GarageView extends Control {
     private renderNotification(winner: Record<string, string>) {
       const [[name, time]] = Object.entries(winner)
       const text = `${name} is winner!!! (${time}s)`
-      const notification = new Notification(document.body, "notification", text);
+      new Notification(document.body, "notification", text);
     }
 
     private addToSignal() {
@@ -170,7 +164,7 @@ class GarageView extends Control {
         this.onStopCar.add(this.controller.stopEngine.bind(this.controller))
 
         this.state.onGetCars.add(this.renderCars.bind(this))
-        this.state.onGetCarsCount.add(this.renderPagination.bind(this))
+        this.state.onGetCarsCount.add(this.initPagination.bind(this))
         this.state.onGetCarsCount.add(this.updateTitle.bind(this))
         this.state.onChangeCarState.add(this.updateButtonEngine.bind(this))
         this.state.onChangeRaceState.add(this.settings.updateButtons.bind(this.settings))
