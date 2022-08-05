@@ -2,7 +2,7 @@ import Control from '../../common/control';
 import SVG from '../../common/svgElement';
 // import svg from '../../../assets/sprite.svg';
 import Signal from '../../common/signal';
-import { IWinner } from '../../state/appState'
+import { IWinner } from '../../state/winModel'
 import Button from '../button';
 
 // enum ButtonText {

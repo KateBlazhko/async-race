@@ -1,6 +1,7 @@
-import { IGarageState, IWinnersState }from './appState'
+import { IGarState }from './garModel'
+import { IWinState }from './winModel'
 
-export const initialGarageState: IGarageState = {
+export const initialGarageState: IGarState = {
   settings: {
     create: {
       name: '',
@@ -18,9 +19,9 @@ export const initialGarageState: IGarageState = {
   pagesCount: 1,
 }
 
-export const initialWinnersState: IWinnersState = {
+export const initialWinnersState: IWinState = {
   pageNumber: 1,
   pageLimit: 10,
-  winnersCount: 0,
+  winCount: 0,
   pagesCount: 1,
 }

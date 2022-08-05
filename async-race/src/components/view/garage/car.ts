@@ -2,9 +2,9 @@ import Control from '../../common/control';
 import SVG from '../../common/svgElement';
 import svg from '../../../assets/sprite.svg'
 import Signal from '../../common/signal';
-import { ICar } from '../../state/appState'
+import { ICar } from '../../state/garModel'
 import Button from '../button';
-import { TrackData } from './garageView'
+import { TrackData } from './garView'
 
 enum ButtonText {
   select = "Select",

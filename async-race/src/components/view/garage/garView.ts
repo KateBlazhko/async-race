@@ -1,13 +1,12 @@
 import Control from '../../common/control';
 import Settings from './settings';
-import { ICar, ICarState, IPageCars } from '../../state/appState'
-import AppState from '../../state/appState';
-import AppController from '../../controller/appController';
 import Signal from '../../common/signal';
 import Button from '../button';
 import Car from './car';
 import Notification from '../notification'
 import Pagination from '../pagination';
+import GarageController from '../../controller/garController';
+import GarModel, { ICar, ICarState, IPageCars } from '../../state/garModel';
 
 export type TrackData = {
   [id: number]: [Control, number]
@@ -20,9 +19,9 @@ enum TextContent {
   nextButton = "Next",
 }
 
-class GarageView extends Control {
-  private state: AppState
-  private controller: AppController
+class GarView extends Control {
+  private model: GarModel
+  private controller: GarageController
   private settings: Settings;
   private cars: Control;
   private pagination: Pagination;
@@ -30,9 +29,9 @@ class GarageView extends Control {
   private title: Control
   private subtitle: Control
 
-  constructor(parent: HTMLElement | null, className: string, state: AppState, controller: AppController) {
+  constructor(parent: HTMLElement | null, className: string, model: GarModel, controller: GarageController) {
     super(parent, 'div', className);
-    this.state = state
+    this.model = model
     this.controller = controller
 
     const titleWrap = new Control(this.node, 'div', 'title-wrap')
@@ -43,7 +42,7 @@ class GarageView extends Control {
     this.settings = new Settings(
       this.node,
       'garage__settings settings',
-      this.state.garageState.settings,
+      this.model.state.settings,
       this.onCreateCar,
       this.onUpdateCar,
       selectedCar
@@ -88,20 +87,20 @@ class GarageView extends Control {
     }
 
     private initPagination() {
-      const initialSate = this.controller.getButtonDisable(this.state.garageState)
+      const initialSate = this.controller.getButtonDisable(this.model.state)
 
       this.pagination.render(initialSate)
 
       this.pagination.onPrev = (button: Button) => {
-        this.controller.changePageNumber(this.state.garageState.pageNumber - 1)
-        const [ prev ] = this.controller.getButtonDisable(this.state.garageState)
+        this.controller.changePageNumber(this.model.state.pageNumber - 1)
+        const [ prev ] = this.controller.getButtonDisable(this.model.state)
   
         button.node.disabled = prev
       }
 
       this.pagination.onNext = (button: Button) => {
-        this.controller.changePageNumber(this.state.garageState.pageNumber + 1)
-        const [ _prev, next ] = this.controller.getButtonDisable(this.state.garageState)
+        this.controller.changePageNumber(this.model.state.pageNumber + 1)
+        const [ _prev, next ] = this.controller.getButtonDisable(this.model.state)
   
         button.node.disabled = next
       }
@@ -163,12 +162,12 @@ class GarageView extends Control {
         this.onStartCar.add(this.controller.startEngine.bind(this.controller))
         this.onStopCar.add(this.controller.stopEngine.bind(this.controller))
 
-        this.state.onGetCars.add(this.renderCars.bind(this))
-        this.state.onGetCarsCount.add(this.initPagination.bind(this))
-        this.state.onGetCarsCount.add(this.updateTitle.bind(this))
-        this.state.onChangeCarState.add(this.updateButtonEngine.bind(this))
-        this.state.onChangeRaceState.add(this.settings.updateButtons.bind(this.settings))
-        this.state.onShowWinner.add(this.renderNotification.bind(this))
+        this.model.onGetCars.add(this.renderCars.bind(this))
+        this.model.onGetCarsCount.add(this.initPagination.bind(this))
+        this.model.onGetCarsCount.add(this.updateTitle.bind(this))
+        this.model.onChangeCarState.add(this.updateButtonEngine.bind(this))
+        this.model.onChangeRaceState.add(this.settings.updateButtons.bind(this.settings))
+        this.model.onShowWinner.add(this.renderNotification.bind(this))
 
         this.settings.onInputChange.add(this.controller.inputChange.bind(this.controller))
       }
@@ -176,4 +175,4 @@ class GarageView extends Control {
 
  }
 
-export default GarageView;
+export default GarView;

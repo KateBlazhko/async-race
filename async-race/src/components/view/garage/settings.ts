@@ -1,7 +1,7 @@
 import Control from '../../common/control';
 import Input from '../input'
 import Button from '../button'
-import { ICar, IRaceState, ISettings } from '../../state/appState'
+import { ICar, IRaceState, ISettings } from '../../state/garModel'
 import Signal from '../../common/signal';
 import SVG from '../../common/svgElement';
 import svg from '../../../assets/sprite.svg'

@@ -1,14 +1,14 @@
 import Control from '../../common/control';
-import AppController from '../../controller/appController';
-import AppState, { IPageWinners, IWinner } from '../../state/appState'
+import WinController from '../../controller/winController'
 import Button from '../button';
 import Pagination from '../pagination';
 import Signal from '../../common/signal';
 import Winner from './winner';
+import WinModel, { IWinner, IPageWinners, IWinState}  from '../../state/winModel';
 
 enum TextContent {
   title = 'Winners 0',
-  subtitle = 'Page#1',
+  subtitle = '#1',
   prevButton = 'Prev',
   nextButton = "Next",
   number = 'Number',
@@ -18,9 +18,9 @@ enum TextContent {
   time = "Best time"
 }
 
-class WinnersView extends Control {
-  private state: AppState
-  private controller: AppController
+class WinView extends Control {
+  private model: WinModel
+  private controller: WinController
   private winners: Control;
 
   private title: Control
@@ -28,9 +28,9 @@ class WinnersView extends Control {
   private pagination: Pagination;
   private list: Winner[]
 
-  constructor(parent: HTMLElement | null, className: string, state: AppState, controller: AppController) {
+  constructor(parent: HTMLElement | null, className: string, model: WinModel, controller: WinController) {
     super(parent, 'div', className);
-    this.state = state
+    this.model = model
     this.controller = controller
     this.list = []
 
@@ -74,20 +74,20 @@ class WinnersView extends Control {
   public onSortByTimes = new Signal<IWinner>()
 
   private initPagination() {
-    const initialSate = this.controller.getButtonDisable(this.state.winnersState)
+    const initialSate = this.controller.getButtonDisable(this.model.state)
 
     this.pagination.render(initialSate)
 
     this.pagination.onPrev = (button: Button) => {
-      this.controller.changePageNumber(this.state.garageState.pageNumber - 1)
-      const [ prev ] = this.controller.getButtonDisable(this.state.winnersState)
+      this.controller.changePageNumber(this.model.state.pageNumber - 1)
+      const [ prev ] = this.controller.getButtonDisable(this.model.state)
 
       button.node.disabled = prev
     }
 
     this.pagination.onNext = (button: Button) => {
-      this.controller.changePageNumber(this.state.garageState.pageNumber + 1)
-      const [ _prev, next ] = this.controller.getButtonDisable(this.state.winnersState)
+      this.controller.changePageNumber(this.model.state.pageNumber + 1)
+      const [ _prev, next ] = this.controller.getButtonDisable(this.model.state)
 
       button.node.disabled = next
     }
@@ -97,15 +97,15 @@ class WinnersView extends Control {
     this.title.node.textContent = `Winners ${carsCount}`
   }
 
-  private updateSubtitle(ageNumber: number){
-    this.subtitle.node.textContent = `Page#${ageNumber}`
+  private updateSubtitle(pageNumber: number){
+    this.subtitle.node.textContent = `#${pageNumber}`
 
   }
 
   private addToSignal() {
-    this.state.onGetWinners.add(this.renderWinners.bind(this))
-    this.state.onGetWinnersCount.add(this.initPagination.bind(this))
-    this.state.onGetWinnersCount.add(this.updateTitle.bind(this))
+    this.model.onGetWinners.add(this.renderWinners.bind(this))
+    this.model.onGetwinCount.add(this.initPagination.bind(this))
+    this.model.onGetwinCount.add(this.updateTitle.bind(this))
 
   }
 
@@ -119,4 +119,4 @@ class WinnersView extends Control {
   }
 }
 
-export default WinnersView;
+export default WinView;

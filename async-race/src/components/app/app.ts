@@ -1,11 +1,13 @@
 import Router from './router';
-import AppController from '../controller/appController';
-import AppState from '../state/appState'
+import GarController from '../controller/garController';
+import WinController from '../controller/winController'
 import Control from '../common/control';
-import GarageView from '../view/garage/garageView'
-import WinnersView from '../view/winners/winnersView';
+import GarageView from '../view/garage/garView'
+import WinnersView from '../view/winners/winView';
 import Header from '../view/header';
 import Footer from '../view/footer';
+import GarModel from '../state/garModel';
+import WinModel from '../state/winModel';
 
 export type Page =
   {
@@ -15,8 +17,6 @@ export type Page =
 
 class App {
   private router: Router;
-  private state: AppState;
-  private controller: AppController;
   private garage: GarageView;
   private winners: WinnersView;
   private currentPage: GarageView | WinnersView | null;
@@ -24,11 +24,13 @@ class App {
   public pages: Page[]
 
   constructor() {
-    this.state = new AppState();
-    this.controller = new AppController(this.state);
+    const garModel = new GarModel();
+    const winModel = new WinModel()
+    const garController = new GarController(garModel);
+    const winController = new WinController(winModel);
 
-    this.garage= new GarageView(null, 'garage', this.state, this.controller);
-    this.winners= new WinnersView(null, 'winners', this.state, this.controller);
+    this.garage= new GarageView(null, 'garage', garModel, garController);
+    this.winners= new WinnersView(null, 'winners', winModel, winController);
 
     this.pages = [
       { hash: 'garage', view: this.garage},
