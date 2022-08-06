@@ -1,29 +1,22 @@
-import Signal from "../common/signal";
+// import Signal from "../common/signal";
 
-class AppModel {
-  public _lastWinner: Record<string, string>
+// class AppModel {
+//   public _lastWinner: Record<string, string | number>
 
-  get lastWinner() {
-    return this._lastWinner;
-  }
-  set lastWinner(value: Record<string, string>) {
-    this._lastWinner = value;
-    // this.garageState = {
-    //   ...this.garageState,
-    //   winners: {
-    //     ...this.garageState.winners,
-    //     ...value
-    //   }
-    // }
-    this.onShowWinner.emit(this._lastWinner)
-  }
+//   get lastWinner() {
+//     return this._lastWinner;
+//   }
+//   set lastWinner(value: Record<string, string | number>) {
+//     this._lastWinner = value;
+//     this.onShowWinner.emit(this.lastWinner)
+//   }
 
-  constructor() {
-    this._lastWinner = {}
-  }
+//   constructor() {
+//     this._lastWinner = {}
+//   }
 
-  public onShowWinner = new Signal<Record<string, string>>();
+//   public onShowWinner = new Signal<Record<string, string | number>>();
 
-}
+// }
 
-export default AppModel
+// export default AppModel

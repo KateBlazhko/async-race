@@ -1,35 +1,17 @@
 import Control from '../../common/control';
 import SVG from '../../common/svgElement';
-// import svg from '../../../assets/sprite.svg';
+import svg from '../../../assets/sprite.svg';
 import Signal from '../../common/signal';
 import { IWinner } from '../../state/winModel'
 import Button from '../button';
 
-// enum ButtonText {
-//   select = "Select",
-//   remove = "Remove",
-//   start = "Start",
-//   stop = "Stop",
-// }
 
 class Car extends Control {
-  private _time: Readonly<number>
-  private _id: Readonly<number>
-  private _wins: Readonly<number>
-
-  get id() {
-    return this._id
-  }
-  get wins() {
-    return this._wins
-  }
-  get time() {
-    return this._time
-  }
   
   constructor(
     public parent: HTMLElement | null, 
     public className: string, 
+    private number: number,
     private winner: IWinner, 
     private onSortByWins: Signal<IWinner>,
     private onSortByTimes: Signal<IWinner>,
@@ -37,15 +19,31 @@ class Car extends Control {
     super(parent, 'div', className);
 
     this.winner = winner
-    this._id = this.winner.id
-    this._wins = this.winner.wins
-    this._time = this.winner.time
+    this.number = number
 
     this.onSortByWins = onSortByWins
     this.onSortByTimes = onSortByTimes
-
-    
+    this.render()
   }
+  render () {
+    const tableCells:(keyof typeof this.winner)[] = ['id', 'color', 'name', 'wins', 'time']
+    tableCells.map(cell => {
+      if (cell === 'color' && this.winner.color) {
+        const svgWrap = new Control(this.node, 'div', 'winners__cell')
+        const car = new SVG(svgWrap.node, 'svg_car', svg + '#car')
+        car.setColor(this.winner.color)
+        return car
+      } 
+      if (cell === 'id') {
+        return new Control(this.node, 'span', 'winners__cell', this.number.toString())
+      }
+
+      return new Control(this.node, 'span', 'winners__cell', this.winner[cell]?.toString())
+
+    })
+
+  }
+
 }
 
 export default Car;

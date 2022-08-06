@@ -19,20 +19,10 @@ enum StatusEngine {
 
 class GarController extends AppController{
   private animationFrames: IAnimationFrames;
-  private _carState: ICarState
-
-  set carState(value: ICarState) {
-    this._carState = value
-    this.checkRaceState()
-  }
-  get carState() {
-    return this._carState
-  }
 
   constructor(public model: GarState) {
     super(model)
     this.animationFrames = {}
-    this._carState = this.model.carState
   }
 
   public async getCars() {
@@ -65,6 +55,8 @@ class GarController extends AppController{
         }
       }
     }
+
+    this.model.carState = {}
 
     this.getCountCars()
   }
@@ -159,22 +151,39 @@ class GarController extends AppController{
   }
 
   public async startRace(carList: Car[]) {
+    try {
+      const [ car ] = carList
+      const trackLenght = car.getTrackLength()
+      this.model.isFinish = false
 
-    const [ car ] = carList
-    const trackLenght = car.getTrackLength()
+      const resultRace = await Promise.any(carList.map(async (car) => {
+
+        const trackData: TrackData = {
+          [car.id]: [car.image, trackLenght]
+        }
+
+        const resultCar = await this.startEngine(trackData)
+        if (resultCar === undefined) throw Error ("Car is broken")
+        return {
+          name: car.name,
+          time: (resultCar / 1000).toFixed(1),
+          id: car.id
+        }
+      }))
+
+      this.model.isFinish = true
+      if(this.model.carState[resultRace.id]) 
+        this.model.lastWinner = resultRace
+
+    } catch (e: unknown) {
+      const error = e as Error
+      this.model.isFinish = true
+      console.error(error.message)
+    }
     
-    this.model.lastWinner = await Promise.any(carList.map(async (car) => {
-      const trackData: TrackData = {
-        [car.id]: [car.image, trackLenght]
-      }
-      const resultCar = await this.startEngine(trackData)
-      if (resultCar === undefined) throw Error ("Car is broken")
-      return {[car.name]: (resultCar / 1000).toFixed(1)}
-    }))
   }
 
   public async resetRace(carList: Car[]) {
-
     const [ car ] = carList
     const trackLenght = car.getTrackLength()
 
@@ -184,7 +193,6 @@ class GarController extends AppController{
       }
       return this.stopEngine(trackData)
     })
-
   }
 
   public async startEngine(trackData: TrackData) {
@@ -203,10 +211,12 @@ class GarController extends AppController{
         },
         headers
       ) as IEngineData
-  
-
+        console.log('start', id)
       const timeMoving = this.countAnimationTime(result, +id, ...track)
-      return await this.toDriveMode(timeMoving, +id) 
+      this.addCarState(+id, true)
+      const resultCar = await this.toDriveMode(+id) 
+
+      return resultCar ? timeMoving: undefined
 
     } catch (e: unknown) {
       const error = e as Error
@@ -215,7 +225,7 @@ class GarController extends AppController{
     
   }
 
-  private async toDriveMode(timeMoving: number, id: number) {
+  private async toDriveMode(id: number) {
     const endpoint: string = '/engine';
 
     try {
@@ -227,12 +237,13 @@ class GarController extends AppController{
           }
         })
   
-      if (result === 'stop') {
+      if (result === '500') {
         this.stopAnimation(id)
         throw Error(`Car#${id} is broken`)
       }
 
-      return timeMoving
+      if (result)
+        return true
   
     } catch (e: unknown) { 
       const error = e as Error
@@ -244,25 +255,33 @@ class GarController extends AppController{
     const [ id ]= Object.keys(trackData)
     const [ track ]= Object.values(trackData)
     const isDriving = this.model.carState[+id]
+    
+    if (isDriving === false) {
+      const [ car ] = track
+      this.resetCarPosition(+id, car)
 
-    const endpoint: string = '/engine';
-    const headers = {'Content-Type': 'application/json'}
-    const result = await this.loader.patch(
-      { endpoint, gueryParams: 
-        {
-        id: id,
-        status: StatusEngine.stop
-        }
-      },
-      headers
-    ) as IEngineData
+    } else {
+      const endpoint: string = '/engine';
+      const headers = {'Content-Type': 'application/json'}
+      const result = await this.loader.patch(
+        { endpoint, gueryParams: 
+          {
+          id: id,
+          status: StatusEngine.stop
+          }
+        },
+        headers
+      ) as IEngineData
+  
+      if (result)  {  
+        console.log('stop', id)
+        this.stopAnimation(+id)
 
-    if (result)  {  
-      this.stopAnimation(+id)
-    }  
-
-    const [ car ] = track
-    this.resetCarPosition(+id, car)
+        const [ car ] = track
+        this.resetCarPosition(+id, car)
+      }  
+    }
+    
   }
 
 
@@ -278,8 +297,6 @@ class GarController extends AppController{
   }
 
   private animateCar(timeMoving: number, distance: number, car: Control, id: number) {
-    this.addCarState(id, true)
-
     car.node.style.left = '0'
     const start = new Date().getTime()
     let previousTimeStamp = start
@@ -304,22 +321,17 @@ class GarController extends AppController{
   }
 
   private stopAnimation(id: number) {
-    // this.addCarState(id, false)
     window.cancelAnimationFrame(this.animationFrames[id])
+    this.changeCarState(+id, false)
   }
 
   private resetCarPosition(id: number, car: Control) {
     car.node.style.left = "0%"
-    this.addCarState(id, false)
 
-    delete this.model.carState[id]
-
-    this.carState = this.model.carState
+    this.delCarState(id)
   }
 
   public async removeCar(car: ICar) {
-    const garageState = this.model.state
-
     const endpoint: string = '/garage' + `/${car.id}`;
 
     const result = await this.loader.delete(
@@ -328,6 +340,10 @@ class GarController extends AppController{
 
     if(result) {
       this.getCars()
+
+      if (car.id in this.model.carState) {
+        this.delCarState(car.id)
+      }
     }
   }
 
@@ -362,40 +378,27 @@ class GarController extends AppController{
     }
   }
 
-  public changePageNumber(pageNumber: number){
-    const garageState = this.model.state
-
-    this.model.state = {
-      ...garageState,
-      pageNumber: pageNumber
-    }
-
-    this.getCars()
-  }
-
-  private addCarState(id: number, isDriving: boolean) {
-    this.model.carState = {
-      ...this.model.carState,
-      [id]: isDriving
-    }
-
-    this.carState = this.model.carState
-  }
-
-  private checkRaceState() {
-    // const maxCars = this.model.garageState.pageLimit
-
-    if (Object.keys(this.carState).length > 0) {
-      this.model.raceState = {
-        race: true
+  private addCarState(id: number, isDriving: boolean) { 
+      this.model.carState = {
+        ...this.model.carState,
+        [id]: isDriving
       }
-    }
-    if (Object.keys(this.carState).length === 0) {
-      this.model.raceState = {
-        race: false
+  }
+
+  private changeCarState(id: number, isDriving: boolean) {
+    if (id in this.model.carState) {
+      this.model.carState = {
+        ...this.model.carState,
+        [id]: isDriving
       }
     }
   }
+
+  private delCarState(id: number) {
+    const {[id]: deleted, ...carState} = this.model.carState
+    this.model.carState = {...carState}
+  }
+
 }
 
 export default GarController;

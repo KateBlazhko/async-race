@@ -1,10 +1,9 @@
 import Control from '../../common/control';
 import Input from '../input'
 import Button from '../button'
-import { ICar, IRaceState, ISettings } from '../../state/garModel'
+import { ICar, ISettings } from '../../state/garModel'
 import Signal from '../../common/signal';
-import SVG from '../../common/svgElement';
-import svg from '../../../assets/sprite.svg'
+
 
 enum ButtonText {
   race = "Race",
@@ -132,7 +131,7 @@ class Settings extends Control {
     const buttonReset = new Button(this.buttonsControl.node, 'button', ButtonText.reset, !isRace)
     buttonReset.node.onclick = () => {
       this.onReset()
-      buttonRace.node.disabled = true
+      buttonReset.node.disabled = true
 
     }
 
@@ -144,8 +143,9 @@ class Settings extends Control {
     return [buttonRace, buttonReset, buttonGenerateCars]
   }
 
-  public updateButtons(raceState: IRaceState) {
-    const isRace = raceState.race
+  public updateButtons(raceState: boolean) {
+    const isRace = raceState
+    console.log(isRace)
     this.buttonsList.map(button => button.destroy())
 
     this.buttonsList = this.renderButton(isRace)

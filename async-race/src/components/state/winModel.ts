@@ -1,11 +1,13 @@
 import Signal from "../common/signal";
-import AppModel from "./appModel";
+// import AppModel from "./appModel";
 import { initialWinnersState }from './initialState'
 
 export interface IWinner {
   wins: number,
   time: number,
-  id: number
+  id: number,
+  name?: string,
+  color?: string
 }
 
 export interface IPageWinners {
@@ -20,7 +22,7 @@ export interface IWinState {
   pagesCount: number
 }
 
-class WinModel extends AppModel {
+class WinModel {
   private _pageWinners: IPageWinners;
   private _winCount: number;
   private _state: IWinState
@@ -46,7 +48,7 @@ class WinModel extends AppModel {
       winCount: this._winCount,
       pagesCount: pagesCount
     }
-    this.onGetwinCount.emit(this._winCount);
+    this.onGetWinCount.emit(this._winCount);
   }
 
   get state() {
@@ -57,11 +59,10 @@ class WinModel extends AppModel {
   }
 
   constructor() {
-    super()
+    // super()
     this._state = initialWinnersState
     this._winCount = this._state.winCount
   
-
     this._pageWinners = {
       page: [],
       pageNumber: this._state.pageNumber
@@ -69,7 +70,7 @@ class WinModel extends AppModel {
   }
 
   public onGetWinners = new Signal<IPageWinners>();
-  public onGetwinCount = new Signal<number>();
+  public onGetWinCount = new Signal<number>();
 
   public static checkWinners(data: IWinner[]) {
     return data.every(winner => {

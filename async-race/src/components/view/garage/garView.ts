@@ -32,6 +32,7 @@ class GarView extends Control {
   constructor(parent: HTMLElement | null, className: string, model: GarModel, controller: GarageController) {
     super(parent, 'div', className);
     this.model = model
+
     this.controller = controller
 
     const titleWrap = new Control(this.node, 'div', 'title-wrap')
@@ -64,7 +65,7 @@ class GarView extends Control {
     public onStartCar = new Signal<TrackData>()
     public onStopCar = new Signal<TrackData>()
 
-    public init() {
+    private init() {
       this.initSettings()
 
       this.addToSignal()
@@ -87,26 +88,28 @@ class GarView extends Control {
     }
 
     private initPagination() {
-      const initialSate = this.controller.getButtonDisable(this.model.state)
+      const initialSate = this.controller.getButtonDisable()
 
       this.pagination.render(initialSate)
 
       this.pagination.onPrev = (button: Button) => {
         this.controller.changePageNumber(this.model.state.pageNumber - 1)
-        const [ prev ] = this.controller.getButtonDisable(this.model.state)
+        this.getCars()
+        const [ prev ] = this.controller.getButtonDisable()
   
         button.node.disabled = prev
       }
 
       this.pagination.onNext = (button: Button) => {
         this.controller.changePageNumber(this.model.state.pageNumber + 1)
-        const [ _prev, next ] = this.controller.getButtonDisable(this.model.state)
+        this.getCars()
+        const [ _prev, next ] = this.controller.getButtonDisable()
   
         button.node.disabled = next
       }
     }
 
-    public getCars() {
+    private getCars() {
       this.controller.getCars()
     }
 
@@ -138,15 +141,17 @@ class GarView extends Control {
 
     private updateButtonEngine(carState: ICarState) {
       const id = Object.keys(carState)
-      const cars = this.list.filter(car => id.includes(car.id.toString()))
-      cars.map(car => {
-        const id = car.id
-        car.updateButtonEngine(carState[id])
+      this.list.map(car => {
+        if (id.includes(car.id.toString())) {
+          car.updateButtonEngine(true)
+        } else {
+          car.updateButtonEngine(false)
+        }
       })
     }
 
-    private renderNotification(winner: Record<string, string>) {
-      const [[name, time]] = Object.entries(winner)
+    private renderNotification(winner: Record<string, string | number>) {
+      const {name, time} = winner
       const text = `${name} is winner!!! (${time}s)`
       new Notification(document.body, "notification", text);
     }

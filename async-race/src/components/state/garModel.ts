@@ -1,5 +1,5 @@
 import Signal from "../common/signal";
-import AppModel from "./appModel";
+// import AppModel from "./appModel";
 import { initialGarageState }from './initialState'
 
 export interface ICar {
@@ -42,16 +42,14 @@ export interface ICarState {
   [id: number]: boolean
 }
 
-export interface IRaceState {
-  race: boolean
-}
-
-class GarModel extends AppModel {
+class GarModel {
   private _pageCars: IPageCars;
   private _carsCount: number;
   private _state: IGarState
   private _carState: ICarState
-  private _raceState: IRaceState
+  private _raceState: boolean
+  private _isFinish: boolean
+  public _lastWinner: Record<string, string | number>
 
   get pageCars() {
     return this._pageCars;
@@ -88,39 +86,77 @@ class GarModel extends AppModel {
     return this._carState;
   }
   set carState(value: ICarState) {
+    const lastLength = Object.keys(this.carState).length
     this._carState = value;
-    this.onChangeCarState.emit(this._carState)
+
+    if (Object.keys(this.carState).length !== lastLength) {
+      this.checkRaceState()
+      this.onChangeCarState.emit(this._carState)
+    }
   }
 
   get raceState() {
     return this._raceState;
   }
-  set raceState(value: IRaceState) {
-    this._raceState = value;
-    this.onChangeRaceState.emit(this._raceState)
+  set raceState(value: boolean) {
+
+    if (this.raceState !== value) {
+
+      this._raceState = value;
+      this.onChangeRaceState.emit(value)
+    }
+  }
+
+  get lastWinner() {
+    return this._lastWinner;
+  }
+  set lastWinner(value: Record<string, string | number>) {
+    this._lastWinner = value;
+    this.onShowWinner.emit(this.lastWinner)
+  }
+
+  get isFinish() {
+    return this._isFinish;
+  }
+  set isFinish(value: boolean) {
+    this._isFinish = value;
+    if (this.isFinish) 
+      this.checkRaceState()
   }
 
   constructor() {
-    super()
+    // super()
     this._state = initialGarageState
     this._carsCount = this._state.carsCount
-    
-    this._carState = {}
-    this._raceState = {
-      race: false
-    }
+    this._lastWinner = {}
 
+    this._carState = {}
+    this._raceState = false
+    this._isFinish = false
     this._pageCars = {
       page: [],
       pageNumber: this._state.pageNumber
     }
+
   }
 
   public onGetCars = new Signal<IPageCars>();
   public onGetCarsCount = new Signal<number>();
   public onChangeCarState = new Signal<ICarState>();
-  public onChangeRaceState = new Signal<IRaceState>();
-  public onShowWinner = new Signal<Record<string, string>>();
+  public onChangeRaceState = new Signal<boolean>();
+  public onShowWinner = new Signal<Record<string, string | number>>();
+
+  private checkRaceState() {
+
+    if (Object.keys(this.carState).length > 0) {
+      this.raceState = true
+      return
+    }
+    if (Object.keys(this.carState).length === 0) {
+      if (this.isFinish)
+        this.raceState = false
+    }
+  }
 
   public static checkCars(data: ICar[]) {
 

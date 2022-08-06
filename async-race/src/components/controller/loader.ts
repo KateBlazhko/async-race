@@ -94,8 +94,9 @@ class Loader {
       const checkRespose = Loader.errorHandler(response, Status.Created);
 
       if (checkRespose) {
-        return true
+        return typeof checkRespose === 'string'? checkRespose : true
       }
+
     } catch {
       (err: Error) => console.error(err);
     }
@@ -139,7 +140,7 @@ class Loader {
     try {
       const method = 'GET';
       const response = await fetch(this.makeUrl(options), { method });
-      const checkRespose: Response | string = Loader.errorHandler(response, Status.OK);
+      const checkRespose = Loader.errorHandler(response, Status.OK);
 
       if (checkRespose) 
         return  response.headers.get(headersName)
@@ -149,11 +150,10 @@ class Loader {
     }
   }
 
-  private static errorHandler(res: Response, status: number): Response | string {
+  private static errorHandler(res: Response, status: number): Response | string | undefined {
     if (!(res.status === status)) {
       if(res.status === Status["INTERNAL SERVER ERROR"])
-      console.log(res.statusText)
-        return 'stop'
+        return '500'
 
       if (res.status in Status) {
         console.log(

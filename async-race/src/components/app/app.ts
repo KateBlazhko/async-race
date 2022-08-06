@@ -27,7 +27,7 @@ class App {
     const garModel = new GarModel();
     const winModel = new WinModel()
     const garController = new GarController(garModel);
-    const winController = new WinController(winModel);
+    const winController = new WinController(winModel, garModel);
 
     this.garage= new GarageView(null, 'garage', garModel, garController);
     this.winners= new WinnersView(null, 'winners', winModel, winController);

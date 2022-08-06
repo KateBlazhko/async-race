@@ -54,7 +54,7 @@ class Car extends Control {
     const buttonsControl = new Control(this.node, 'div', 'garage__button-wrap double')
     this.renderButtonsControl(buttonsControl)
     
-    new Control(this.node, 'span', 'garage__name', car.name + car.id)
+    new Control(this.node, 'span', 'garage__name', car.name)
 
     this.buttonsEngine = new Control(this.node, 'div', 'garage__button-wrap')
 
