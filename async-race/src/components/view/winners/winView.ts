@@ -116,13 +116,46 @@ class WinView extends Control {
   }
 
   private renderHeader() {
+    let isWinsUp = false
+    let isTimeUp = false
     const row = new Control(this.winners.node, 'div', 'winners__row winners__row_header')
-    new Control(row.node, 'span', 'winners__cell', TextContent.number)
-    new Control(row.node, 'span', 'winners__cell', TextContent.car)
-    new Control(row.node, 'span', 'winners__cell', TextContent.name)
-    new Control(row.node, 'span', 'winners__cell', TextContent.wins)
-    new Control(row.node, 'span', 'winners__cell', TextContent.time)
+    new Control(row.node, 'div', 'winners__cell', TextContent.number)
+    new Control(row.node, 'div', 'winners__cell', TextContent.car)
+    new Control(row.node, 'div', 'winners__cell', TextContent.name)
+    const wins = new Control(row.node, 'div', 'winners__cell winners__cell_sort', TextContent.wins)
+    wins.node.onclick = () => {
+      isWinsUp = !isWinsUp
 
+      this.controller.getWinners('wins', isWinsUp ? 'ASC': 'DESC')
+      if (isWinsUp) {
+        wins.node.classList.add(`up`)
+        wins.node.classList.remove(`down`)
+      } else {
+        wins.node.classList.add(`down`)
+        wins.node.classList.remove(`up`)
+      }
+
+      time.node.classList.remove('down')
+      time.node.classList.remove('up')
+
+    }
+    const time = new Control(row.node, 'div', 'winners__cell winners__cell_sort', TextContent.time)
+    time.node.onclick = () => {
+      isTimeUp = !isTimeUp
+
+      this.controller.getWinners('time', isTimeUp ? 'ASC': 'DESC')
+      if (isTimeUp) {
+        time.node.classList.add(`up`)
+        time.node.classList.remove(`down`)
+      } else {
+        time.node.classList.add(`down`)
+        time.node.classList.remove(`up`)
+      }
+
+      wins.node.classList.remove('down')
+      wins.node.classList.remove('up')
+
+    }
   }
 }
 

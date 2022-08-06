@@ -8,10 +8,10 @@ class WinController extends AppController{
 
   constructor(public model: WinModel, public garModel: GarModel) {
     super(model)
-    garModel.onShowWinner.add(this.createWinner.bind(this))
+    garModel.onShowWinner.add(this.getWinner.bind(this))
   }
 
-  public async getWinners() {
+  public async getWinners(sort: 'id'|'wins'|'time' = 'id', order: 'ASC'|'DESC' = 'ASC') {
     const endpoint: string = '/winners';
     const state = this.model.state
     const pageNumber = state.pageNumber
@@ -21,6 +21,8 @@ class WinController extends AppController{
       gueryParams: {
           _page: pageNumber,
           _limit: state.pageLimit,
+          _sort: sort,
+          _order: order
       },
     }) as IWinner[];
 
@@ -46,6 +48,10 @@ class WinController extends AppController{
     }
     this.getCountWinners()
   }
+
+  // public sortWinners(sort: 'wins'|'time', order: boolean) {
+
+  // }
 
   public async getDataAboutCar(...winners: IWinner[]) {
 
@@ -81,51 +87,65 @@ class WinController extends AppController{
   }
 
   private async createWinner(lastWinner: Record<string, string | number>) {
-    const endpoint: string = '/winners';
-    const headers = {'Content-Type': 'application/json'}
-    const body = JSON.stringify({
-      id: +lastWinner.id,
-      wins: 1,
-      time: +lastWinner.time
-    })
+    try {
+      const endpoint: string = '/winners';
+      const headers = {'Content-Type': 'application/json'}
+      const body = JSON.stringify({
+        id: +lastWinner.id,
+        wins: 1,
+        time: +lastWinner.time
+      })
+  
+      const result = await this.loader.post(
+        { endpoint, gueryParams: {} },
+        headers,
+        body)
+  
 
-    const result = await this.loader.post(
-      { endpoint, gueryParams: {} },
-      headers,
-      body)
-
-    if (result === '500') {
-      // this.updateWinners(lastWinner)
-      return
-    }
-
-    if(result) {
-      this.getWinners()
+      if(result) {
+        this.getWinners()
+      }
+  
+    } catch (e: unknown) { 
+      const error = e as Error
+      console.error(error.message)
     }
   }
 
-  private async getWinner(id: number) {
-    const endpoint: string = `/winners/${id}`;
+  private async getWinner(newData: Record<string, string | number>) {
+    try {
+      const endpoint: string = `/winners/${newData.id}`;
 
-    return await this.loader.get({ 
-      endpoint,
-      gueryParams: {},
-    }) as IWinner;
+      const result = await this.loader.get({ 
+        endpoint,
+        gueryParams: {},
+      }) as IWinner;
+  
+      if (result) {
+        this.updateWinner({
+          wins: result.wins + 1,
+          time: Math.min(result.time, +newData.time)
+        }, result.id)
+        return
+      }
+
+      throw new Error("This car doesn't seem to have won yet, record the results...")
+
+    } catch (e: unknown) { 
+      const error = e as Error
+      this.createWinner(newData)
+
+      console.error(error.message)
+    }
+    
 
   }
-  private async updateWinners(winner: Record<string, string | number>) {
-      const lastData = await this.getWinner(+winner.id) 
+  private async updateWinner(newData: Record<string, string | number>, id: number) {
 
-      const [ fullData ] = await this.getDataAboutCar(lastData)
-      console.log(fullData)
-
-      const endpoint: string = `/garage/${fullData.id}`
+    const endpoint: string = `/winners/${id}`
 
     const headers = {'Content-Type': 'application/json'}
-    const body = JSON.stringify({
-      wins: fullData.wins + 1,
-      time: Math.min(lastData.time, +winner.time)
-    })
+    const body = JSON.stringify(newData)
 
     const result = await this.loader.put(
       { endpoint, gueryParams: {} },

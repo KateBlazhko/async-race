@@ -145,7 +145,6 @@ class Settings extends Control {
 
   public updateButtons(raceState: boolean) {
     const isRace = raceState
-    console.log(isRace)
     this.buttonsList.map(button => button.destroy())
 
     this.buttonsList = this.renderButton(isRace)
