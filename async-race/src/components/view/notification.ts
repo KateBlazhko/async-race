@@ -1,20 +1,19 @@
-import Control from "../common/control";
+import Control from '../common/control';
 
 class Notification extends Control {
-
   constructor(
     parent: HTMLElement | null,
     className: string,
-    notification: string
+    notification: string,
   ) {
-    super(parent, "div", className);
+    super(parent, 'div', className);
 
-    const overlay = new Control(this.node, "div", "notification__overlay");
-    const container = new Control(overlay.node, "div", "notification__inner");
+    const overlay = new Control(this.node, 'div', 'notification__overlay');
+    const container = new Control(overlay.node, 'div', 'notification__inner');
 
-    new Control(container.node, 'span', "notification__text", notification)
+    const text = new Control(container.node, 'span', 'notification__text', notification);
 
-    // setTimeout(() => this.onClose(), 1500);
+    setTimeout(() => this.onClose(), 1500);
 
     overlay.node.onclick = () => {
       this.onClose();
@@ -23,7 +22,7 @@ class Notification extends Control {
 
   onClose() {
     this.node.remove();
-  };
+  }
 }
 
 export default Notification;

@@ -9,9 +9,8 @@ class Header extends Control {
       const button = new Control<HTMLLinkElement>(this.node, 'a', `button button_header header-${page.hash}`);
       button.node.href = `#${page.hash}`;
       button.node.innerText = page.hash[0].toUpperCase() + page.hash.slice(1);
+      return button;
     });
-
-
   }
 }
 

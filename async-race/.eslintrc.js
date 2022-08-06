@@ -21,5 +21,9 @@ module.exports = {
     "no-unused-vars": "off",
     "import/extensions": 0,
     "import/no-unresolved": 0,
+    "no-underscore-dangle":  'off',
+    "no-console": 'off',
+    "no-param-reassign": ["error", { "props": false }],
+    "no-shadow": ["error", { "allow": ["InnerText", "InnerButton", "Status", "StatusEngine"] }]
   },
 };

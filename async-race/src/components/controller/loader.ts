@@ -3,7 +3,7 @@ enum Status {
   'Created' = 201,
   'Bad request' = 400,
   'Not Found' = 404,
-  "TOO MANY REQUESTS" = 429,
+  'TOO MANY REQUESTS' = 429,
   'INTERNAL SERVER ERROR' = 500
 }
 
@@ -20,9 +20,8 @@ class Loader {
   }
 
   public async delete(
-    options: RespObject
+    options: RespObject,
   ) {
-
     try {
       const method = 'DELETE';
 
@@ -30,97 +29,106 @@ class Loader {
       const checkRespose = Loader.errorHandler(response, Status.OK);
 
       if (checkRespose) {
-        return true
+        return true;
       }
-    } catch {
-      (err: Error) => console.error(err);
+
+      return false;
+    } catch (e: unknown) {
+      const error = e as Error;
+      console.error(error.message);
+      return false;
     }
   }
 
   public async put(
     options: RespObject,
     headers: Record<string, string>,
-    body: string
+    body: string,
   ) {
-
     try {
       const method = 'PUT';
 
-      const response = await fetch(this.makeUrl(options), { method, headers, body});
+      const response = await fetch(this.makeUrl(options), { method, headers, body });
       const checkRespose = Loader.errorHandler(response, Status.OK);
 
       if (checkRespose) {
-        return true
+        return true;
       }
-    } catch {
-      (err: Error) => console.error(err);
+
+      return false;
+    } catch (e: unknown) {
+      const error = e as Error;
+      console.error(error.message);
+      return false;
     }
   }
 
   public async patch<Data>(
     options: RespObject,
     headers?: Record<string, string>,
-    body?: string
+    body?: string,
   ) {
-
     try {
       const method = 'PATCH';
 
-      const response = await fetch(this.makeUrl(options), { method, headers, body});
-      const checkRespose= Loader.errorHandler(response, Status.OK);
+      const response = await fetch(this.makeUrl(options), { method, headers, body });
+      const checkRespose = Loader.errorHandler(response, Status.OK);
       if (checkRespose) {
-
-        if (typeof checkRespose === 'string') 
-          return checkRespose
+        if (typeof checkRespose === 'string') { return checkRespose; }
 
         const data = response.json() as Promise<Data>;
-        return data
+        return data;
       }
-    } catch {
-      (err: Error) => console.error(err);
+
+      return false;
+    } catch (e: unknown) {
+      const error = e as Error;
+      console.error(error.message);
+      return false;
     }
   }
 
   public async post(
     options: RespObject,
     headers: Record<string, string>,
-    body: string
+    body: string,
   ) {
-
     try {
       const method = 'POST';
 
-      const response = await fetch(this.makeUrl(options), { method, headers, body});
+      const response = await fetch(this.makeUrl(options), { method, headers, body });
       const checkRespose = Loader.errorHandler(response, Status.Created);
 
       if (checkRespose) {
-        return typeof checkRespose === 'string'? checkRespose : true
+        return typeof checkRespose === 'string' ? checkRespose : true;
       }
 
-    } catch {
-      (err: Error) => console.error(err);
+      return false;
+    } catch (e: unknown) {
+      const error = e as Error;
+      console.error(error.message);
+      return false;
     }
   }
 
   public async postAll(
     options: RespObject,
     headers: Record<string, string>,
-    bodyArray: string[]
+    bodyArray: string[],
   ) {
-
     try {
-      await Promise.all(bodyArray.map(item => 
-        this.post(options, headers, item)
-      ))
+      await Promise.all(bodyArray.map((item) => this.post(options, headers, item)));
 
-      return true
-    } catch {
-      (err: Error) => console.error(err);
+      return true;
+    } catch (e: unknown) {
+      const error = e as Error;
+      console.error(error.message);
+      return false;
     }
   }
 
   public async get<Data>(
-      options: RespObject,
+    options: RespObject,
   ) {
     try {
       const method = 'GET';
@@ -129,10 +137,14 @@ class Loader {
 
       if (checkRespose) {
         const data = response.json() as Promise<Data>;
-        return data
+        return data;
       }
-    } catch {
-      (err: Error) => console.error(err);
+
+      return false;
+    } catch (e: unknown) {
+      const error = e as Error;
+      console.error(error.message);
+      return false;
     }
   }
 
@@ -142,18 +154,21 @@ class Loader {
       const response = await fetch(this.makeUrl(options), { method });
       const checkRespose = Loader.errorHandler(response, Status.OK);
 
-      if (checkRespose) 
-        return  response.headers.get(headersName)
+      if (checkRespose) {
+        return response.headers.get(headersName);
+      }
 
-    } catch {
-      (err: Error) => console.error(err);
+      return false;
+    } catch (e: unknown) {
+      const error = e as Error;
+      console.error(error.message);
+      return false;
     }
   }
 
   private static errorHandler(res: Response, status: number): Response | string | undefined {
     if (!(res.status === status)) {
-      if(res.status === Status["INTERNAL SERVER ERROR"])
-        return '500'
+      if (res.status === Status['INTERNAL SERVER ERROR']) return '500';
 
       if (res.status in Status) {
         console.log(
@@ -168,12 +183,12 @@ class Loader {
   }
 
   private makeUrl(options: RespObject): string {
-    const { endpoint, gueryParams } = options
+    const { endpoint, gueryParams } = options;
 
     let url = `${this.baseLink}${endpoint}?`;
 
     Object.keys(gueryParams).forEach((key) => {
-      gueryParams[key] && (url += `${key}=${gueryParams[key]}&`);
+      if (gueryParams[key]) { url += `${key}=${gueryParams[key]}&`; }
     });
 
     return url.slice(0, -1);

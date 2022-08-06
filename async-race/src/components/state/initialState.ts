@@ -1,5 +1,5 @@
-import { IGarState }from './garModel'
-import { IWinState }from './winModel'
+import { IGarState } from './garModel';
+import { IWinState } from './winModel';
 
 export const initialGarageState: IGarState = {
   settings: {
@@ -17,11 +17,11 @@ export const initialGarageState: IGarState = {
   pageLimit: 7,
   carsCount: 0,
   pagesCount: 1,
-}
+};
 
 export const initialWinnersState: IWinState = {
   pageNumber: 1,
   pageLimit: 10,
   winCount: 0,
   pagesCount: 1,
-}
+};

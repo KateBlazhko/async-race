@@ -1,46 +1,48 @@
-import Control from "../common/control";
+import Control from '../common/control';
 import Button from './button';
 
-enum TextButton {
+enum InnerButton {
   prevButton = 'Prev',
-  nextButton = "Next",
+  nextButton = 'Next',
 }
 
 class Pagination extends Control {
-  private paginationButtons: Button[]
-  public onPrev: (button: Button) => void
-  public onNext: (button: Button) => void
+  private paginationButtons: Button[];
+
+  public onPrev: (button: Button) => void;
+
+  public onNext: (button: Button) => void;
 
   constructor(
     parent: HTMLElement | null,
     className: string,
   ) {
-    super(parent, "div", className);
-    this.onPrev = () => {}
-    this.onNext = () => {}
+    super(parent, 'div', className);
+    this.onPrev = () => {};
+    this.onNext = () => {};
 
-    this.paginationButtons = []
+    this.paginationButtons = [];
   }
 
   public render(initialSate: boolean[]) {
-    if (this.paginationButtons && this.paginationButtons.length > 0) 
-      this.paginationButtons.map(button => button.destroy())
+    if (this.paginationButtons && this.paginationButtons.length > 0) {
+      this.paginationButtons.map((button) => button.destroy());
+    }
 
-    const [prev, next] = initialSate
+    const [prev, next] = initialSate;
 
-    const buttonPrev = new Button(this.node, 'button', TextButton.prevButton, prev)
+    const buttonPrev = new Button(this.node, 'button', InnerButton.prevButton, prev);
     buttonPrev.node.onclick = () => {
-      this.onPrev(buttonPrev)
-    }
+      this.onPrev(buttonPrev);
+    };
 
-    const buttonNext = new Button(this.node, 'button', TextButton.nextButton, next)
+    const buttonNext = new Button(this.node, 'button', InnerButton.nextButton, next);
     buttonNext.node.onclick = () => {
-      this.onNext(buttonNext)
-    }
+      this.onNext(buttonNext);
+    };
 
-    this.paginationButtons = [buttonPrev, buttonNext]
+    this.paginationButtons = [buttonPrev, buttonNext];
   }
-  
 }
 
-export default Pagination
+export default Pagination;
