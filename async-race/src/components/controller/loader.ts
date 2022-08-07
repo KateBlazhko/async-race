@@ -67,11 +67,13 @@ class Loader {
     options: RespObject,
     headers?: Record<string, string>,
     body?: string,
+    signal?: AbortSignal,
   ) {
     try {
       const method = 'PATCH';
-
-      const response = await fetch(this.makeUrl(options), { method, headers, body });
+      const response = await fetch(this.makeUrl(options), {
+        method, headers, body, signal,
+      });
       const checkRespose = Loader.errorHandler(response, Status.OK);
       if (checkRespose) {
         if (typeof checkRespose === 'string') { return checkRespose; }
@@ -81,9 +83,7 @@ class Loader {
       }
 
       return false;
-    } catch (e: unknown) {
-      const error = e as Error;
-      console.error(error.message);
+    } catch {
       return false;
     }
   }

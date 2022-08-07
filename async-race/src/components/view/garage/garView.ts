@@ -178,7 +178,7 @@ class GarView extends Control {
       this.onSelectCar.add(this.settings.changeInputsUpdate.bind(this.settings));
       this.onRemoveCar.add(this.controller.removeCar.bind(this.controller));
 
-      this.onStartCar.add(this.controller.startEngine.bind(this.controller));
+      this.onStartCar.add(this.controller.startSingleRace.bind(this.controller));
       this.onStopCar.add(this.controller.stopEngine.bind(this.controller));
 
       this.model.onGetCars.add(this.renderCars.bind(this));

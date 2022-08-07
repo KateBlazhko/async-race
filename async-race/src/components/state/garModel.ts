@@ -130,18 +130,19 @@ class GarModel {
 
   set isFinish(value: boolean) {
     this._isFinish = value;
-    if (this.isFinish) { this.checkRaceState(); }
+    if (this.isFinish) {
+      this.checkRaceState();
+    }
   }
 
   constructor() {
-    // super()
     this._state = initialGarageState;
     this._carsCount = this._state.carsCount;
     this._lastWinner = {};
 
     this._carState = {};
     this._raceState = false;
-    this._isFinish = false;
+    this._isFinish = true;
     this._pageCars = {
       page: [],
       pageNumber: this._state.pageNumber,
@@ -161,6 +162,7 @@ class GarModel {
   public onRemoveCar = new Signal<number>();
 
   private checkRaceState() {
+    // const maxCountCar = this.pageCars.page.length;
     if (Object.keys(this.carState).length > 0) {
       this.raceState = true;
       return;

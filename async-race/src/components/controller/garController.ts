@@ -12,6 +12,10 @@ interface IAnimationFrames {
   [id: number]: number
 }
 
+type Success = {
+  'success': true
+}
+
 enum StatusEngine {
   start = 'started',
   stop = 'stopped',
@@ -20,6 +24,8 @@ enum StatusEngine {
 
 class GarController extends AppController {
   private animationFrames: IAnimationFrames;
+
+  private abortController: AbortController | null = null;
 
   constructor(public model: GarState) {
     super(model);
@@ -163,28 +169,38 @@ class GarController extends AppController {
       const trackLenght = firstCar.getTrackLength();
       this.model.isFinish = false;
 
-      const resultRace = await Promise.any(carList.map(async (car) => {
-        const trackData: TrackData = {
-          [car.id]: [car.image, trackLenght],
-        };
+      const resultStart = await Promise.all(
+        carList.map(async (car): Promise<[IEngineData, TrackData, string]> => {
+          const trackData: TrackData = {
+            [car.id]: [car.image, trackLenght],
+          };
+          const result = await this.startEngine(car.id);
+          if (!result) throw new Error('Bad start');
+          return [result, trackData, car.name];
+        }),
+      );
 
-        const resultCar = await this.startEngine(trackData);
-        if (!resultCar) throw Error('Car is broken');
+      this.abortController = new AbortController();
+      const { signal } = this.abortController;
+      const resultRace = await Promise.any(resultStart.map(async (race) => {
+        const [engineData, trackData, name] = race;
+        const [[id, track]] = Object.entries(trackData);
+        const timeMoving = this.countAnimationTime(engineData, +id, ...track);
+        const resultCar = await this.toDriveMode(+id, signal);
+        if (resultCar === false) throw Error;
         return {
-          name: car.name,
-          time: (resultCar / 1000).toFixed(1),
-          id: car.id,
+          name,
+          time: (timeMoving / 1000).toFixed(1),
+          id,
         };
       }));
 
       this.model.isFinish = true;
-      if (this.model.carState[resultRace.id]) { this.model.lastWinner = resultRace; }
-
+      this.model.lastWinner = resultRace;
       return true;
-    } catch (e: unknown) {
-      const error = e as Error;
+    } catch {
       this.model.isFinish = true;
-      console.error(error.message);
+      console.error('Race is stopped');
       return false;
     }
   }
@@ -193,19 +209,44 @@ class GarController extends AppController {
     const [firstCar] = carList;
     const trackLenght = firstCar.getTrackLength();
 
-    Promise.all(carList.map((car) => {
+    await Promise.all(carList.map(async (car) => {
       const trackData: TrackData = {
         [car.id]: [car.image, trackLenght],
       };
-      return this.stopEngine(trackData);
+      const result = await this.stopEngine(trackData);
+      if (!result) throw new Error('Bad finish');
+      return true;
     }));
 
     return true;
   }
 
-  public async startEngine(trackData: TrackData) {
-    const [id] = Object.keys(trackData);
-    const [track] = Object.values(trackData);
+  public async startSingleRace(trackData: TrackData) {
+    try {
+      const [id] = Object.keys(trackData);
+      const [track] = Object.values(trackData);
+
+      const resultStart = await this.startEngine(Number(id));
+
+      if (resultStart) {
+        const timeMoving = this.countAnimationTime(resultStart, +id, ...track);
+
+        this.abortController = new AbortController();
+        const { signal } = this.abortController;
+        const resultCar = await this.toDriveMode(+id, signal);
+
+        return resultCar === true ? timeMoving : false;
+      }
+
+      return false;
+    } catch (e: unknown) {
+      const error = e as Error;
+      console.error(error.message);
+      return false;
+    }
+  }
+
+  public async startEngine(id: number) {
     const endpoint: string = '/engine';
     const headers = { 'Content-Type': 'application/json' };
 
@@ -221,12 +262,8 @@ class GarController extends AppController {
         },
         headers,
       ) as IEngineData;
-      console.log('start', id);
-      const timeMoving = this.countAnimationTime(result, +id, ...track);
-      this.addCarState(+id, true);
-      const resultCar = await this.toDriveMode(+id);
 
-      return resultCar ? timeMoving : false;
+      return result;
     } catch (e: unknown) {
       const error = e as Error;
       console.error(error.message);
@@ -234,10 +271,10 @@ class GarController extends AppController {
     }
   }
 
-  private async toDriveMode(id: number) {
+  private async toDriveMode(id: number, signal: AbortSignal) {
     const endpoint: string = '/engine';
-
     try {
+      this.addCarState(id, true);
       const result = await this.loader.patch(
         {
           endpoint,
@@ -247,17 +284,20 @@ class GarController extends AppController {
             status: StatusEngine.drive,
           },
         },
-      );
+        {},
+        '',
+        signal,
+      ) as Success | '500';
 
       if (result === '500') {
-        this.stopAnimation(id);
         throw Error(`Car#${id} is broken`);
       }
 
       if (result) return true;
 
-      return false;
+      throw new Error('Car is stopped');
     } catch (e: unknown) {
+      this.stopAnimation(id);
       const error = e as Error;
       console.error(error.message);
       return false;
@@ -272,9 +312,14 @@ class GarController extends AppController {
     if (isDriving === false) {
       const [car] = track;
       this.resetCarPosition(+id, car);
-    } else {
+      return true;
+    }
+
+    try {
       const endpoint: string = '/engine';
       const headers = { 'Content-Type': 'application/json' };
+
+      this.abortController?.abort();
       const result = await this.loader.patch(
         {
           endpoint,
@@ -287,13 +332,14 @@ class GarController extends AppController {
         headers,
       ) as IEngineData;
 
-      if (result) {
-        console.log('stop', id);
-        this.stopAnimation(+id);
-
-        const [car] = track;
-        this.resetCarPosition(+id, car);
-      }
+      this.stopAnimation(+id);
+      const [car] = track;
+      this.resetCarPosition(+id, car);
+      return result;
+    } catch (e: unknown) {
+      const error = e as Error;
+      console.error(error.message);
+      return false;
     }
   }
 
