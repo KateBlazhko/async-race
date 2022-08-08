@@ -165,9 +165,9 @@ class GarView extends Control {
     });
   }
 
-  private static renderNotification(winner: Record<string, string | number>) {
+  private renderNotification(winner: Record<string, string | number>) {
     const { name, time } = winner;
-    const text = new Notification(document.body, 'notification', `${name} is winner!!! (${time}s)`);
+    const text = new Notification(this.node, 'notification', `${name} is winner!!! (${time}s)`);
   }
 
   private addToSignal() {
@@ -186,7 +186,7 @@ class GarView extends Control {
       this.model.onGetCarsCount.add(this.updateTitle.bind(this));
       this.model.onChangeCarState.add(this.updateButtonEngine.bind(this));
       this.model.onChangeRaceState.add(this.settings.updateButtons.bind(this.settings));
-      this.model.onShowWinner.add(GarView.renderNotification.bind(this));
+      this.model.onShowWinner.add(this.renderNotification.bind(this));
 
       this.settings.onInputChange.add(this.controller.inputChange.bind(this.controller));
     }

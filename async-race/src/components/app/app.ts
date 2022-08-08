@@ -44,10 +44,11 @@ class App {
 
     this.router = new Router(this, this.pages);
 
+    const header = new Header(document.body, 'header', this.pages);
+
     const container = new Control(document.body, 'div', 'container');
-    const header = new Header(container.node, 'header', this.pages);
     this.main = new Control(container.node, 'main', 'app');
-    const footer = new Footer(container.node, 'footer');
+    const footer = new Footer(document.body, 'footer');
 
     this.createView();
   }
