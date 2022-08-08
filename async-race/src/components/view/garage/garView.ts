@@ -158,9 +158,9 @@ class GarView extends Control {
     const id = Object.keys(carState);
     this.list.forEach((car) => {
       if (id.includes(car.id.toString())) {
-        car.updateButtonEngine(true);
+        car.updateButtons(true);
       } else {
-        car.updateButtonEngine(false);
+        car.updateButtons(false);
       }
     });
   }
@@ -186,7 +186,10 @@ class GarView extends Control {
       this.model.onGetCarsCount.add(this.updateTitle.bind(this));
       this.model.onChangeCarState.add(this.updateButtonEngine.bind(this));
       this.model.onChangeRaceState.add(this.settings.updateButtons.bind(this.settings));
+      this.model.onChangeRaceState.add(this.pagination.updateButtons.bind(this.pagination));
+
       this.model.onShowWinner.add(this.renderNotification.bind(this));
+      // this.model.onFinish.add()
 
       this.settings.onInputChange.add(this.controller.inputChange.bind(this.controller));
     }

@@ -141,9 +141,7 @@ class Loader {
       }
 
       return false;
-    } catch (e: unknown) {
-      const error = e as Error;
-      console.error(error.message);
+    } catch {
       return false;
     }
   }
@@ -170,11 +168,11 @@ class Loader {
     if (!(res.status === status)) {
       if (res.status === Status['INTERNAL SERVER ERROR']) return '500';
 
-      if (res.status in Status) {
-        console.log(
-          `Sorry, but there is ${res.status} error: ${res.statusText}`,
-        );
-      }
+      // if (res.status in Status) {
+      //   console.log(
+      //     `Sorry, but there is ${res.status} error: ${res.statusText}`,
+      //   );
+      // }
 
       throw Error(res.statusText);
     }

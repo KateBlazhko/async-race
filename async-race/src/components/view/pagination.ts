@@ -9,6 +9,8 @@ enum InnerButton {
 class Pagination extends Control {
   private paginationButtons: Button[];
 
+  private initialSate: boolean[] | null = null;
+
   public onPrev: (button: Button) => void;
 
   public onNext: (button: Button) => void;
@@ -25,6 +27,7 @@ class Pagination extends Control {
   }
 
   public render(initialSate: boolean[]) {
+    this.initialSate = initialSate;
     if (this.paginationButtons && this.paginationButtons.length > 0) {
       this.paginationButtons.map((button) => button.destroy());
     }
@@ -42,6 +45,20 @@ class Pagination extends Control {
     };
 
     this.paginationButtons = [buttonPrev, buttonNext];
+  }
+
+  public updateButtons(raceState: boolean) {
+    const isRace = raceState;
+    const [buttonPrev, buttonNext] = this.paginationButtons;
+
+    if (isRace) {
+      buttonPrev.node.disabled = isRace;
+      buttonNext.node.disabled = isRace;
+    } else if (this.initialSate) {
+      const [prev, next] = this.initialSate;
+      buttonPrev.node.disabled = prev;
+      buttonNext.node.disabled = next;
+    }
   }
 }
 

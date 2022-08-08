@@ -23,13 +23,12 @@ enum StatusEngine {
 }
 
 class GarController extends AppController {
-  private animationFrames: IAnimationFrames;
+  private animationFrames: IAnimationFrames = {};
 
-  private abortController: AbortController | null = null;
+  public abortController: AbortController | null = null;
 
   constructor(public model: GarState) {
     super(model);
-    this.animationFrames = {};
   }
 
   public async getCars() {
@@ -180,29 +179,35 @@ class GarController extends AppController {
         }),
       );
 
-      this.abortController = new AbortController();
-      const { signal } = this.abortController;
-      const resultRace = await Promise.any(resultStart.map(async (race) => {
-        const [engineData, trackData, name] = race;
-        const [[id, track]] = Object.entries(trackData);
-        const timeMoving = this.countAnimationTime(engineData, +id, ...track);
-        const resultCar = await this.toDriveMode(+id, signal);
-        if (resultCar === false) throw Error;
-        return {
-          name,
-          time: (timeMoving / 1000).toFixed(1),
-          id,
-        };
-      }));
-
-      this.model.isFinish = true;
+      const resultRace = await this.driveRace(resultStart);
       this.model.lastWinner = resultRace;
-      return true;
     } catch {
-      this.model.isFinish = true;
       console.error('Race is stopped');
-      return false;
+    } finally {
+      this.model.isFinish = true;
     }
+  }
+
+  private async driveRace(resultStart: [IEngineData, TrackData, string][]) {
+    this.abortController = new AbortController();
+    const { signal } = this.abortController;
+
+    const resultRace = await Promise.any(resultStart.map(async (race) => {
+      const [engineData, trackData, name] = race;
+      const [[id, track]] = Object.entries(trackData);
+
+      const timeMoving = this.countAnimationTime(engineData, +id, ...track);
+      const resultCar = await this.toDriveMode(+id, signal);
+
+      if (resultCar === false) throw Error;
+      return {
+        name,
+        time: (timeMoving / 1000).toFixed(1),
+        id,
+      };
+    }));
+
+    return resultRace;
   }
 
   public async resetRace(carList: Car[]) {
@@ -297,9 +302,9 @@ class GarController extends AppController {
 
       throw new Error('Car is stopped');
     } catch (e: unknown) {
-      this.stopAnimation(id);
       const error = e as Error;
       console.error(error.message);
+      this.stopAnimation(id);
       return false;
     }
   }
@@ -318,8 +323,8 @@ class GarController extends AppController {
     try {
       const endpoint: string = '/engine';
       const headers = { 'Content-Type': 'application/json' };
-
       this.abortController?.abort();
+
       const result = await this.loader.patch(
         {
           endpoint,
@@ -385,7 +390,9 @@ class GarController extends AppController {
   private resetCarPosition(id: number, car: Control) {
     car.node.style.left = '0%';
 
-    this.delCarState(id);
+    setTimeout(() => {
+      this.delCarState(id);
+    }, 300);
   }
 
   public async removeCar(car: ICar) {
@@ -399,10 +406,6 @@ class GarController extends AppController {
       this.model.onRemoveCar.emit(car.id);
 
       this.getCars();
-
-      if (car.id in this.model.carState) {
-        this.delCarState(car.id);
-      }
     }
   }
 

@@ -22,9 +22,13 @@ class Car extends Control {
 
   private _name: Readonly<string>;
 
-  private buttonsEngine: Button;
+  private buttonsEngine: Control;
 
-  private buttonsEngineList: Button[];
+  private buttonsControl: Control;
+
+  private buttonsEngineList: Button[] = [];
+
+  private buttonsControlList: Button[] = [];
 
   get id() {
     return this._id;
@@ -57,8 +61,8 @@ class Car extends Control {
     this.onStartCar = onStartCar;
     this.onStopCar = onStopCar;
 
-    const buttonsControl = new Control(this.node, 'div', 'garage__button-wrap double');
-    this.renderButtonsControl(buttonsControl);
+    this.buttonsControl = new Control(this.node, 'div', 'garage__button-wrap double');
+    this.buttonsControlList = this.renderButtonsControl(false);
 
     const name = new Control(this.node, 'span', 'garage__name', car.name);
 
@@ -70,16 +74,28 @@ class Car extends Control {
     this.buttonsEngineList = this.renderButtonsEngine(false);
   }
 
-  renderButtonsControl(wrap: Control) {
-    const buttonSelect = new Button(wrap.node, 'button button_car', InnerButton.select);
+  renderButtonsControl(isDriving: boolean) {
+    const buttonSelect = new Button(
+      this.buttonsControl.node,
+      'button button_car',
+      InnerButton.select,
+      isDriving,
+    );
     buttonSelect.node.onclick = () => {
       this.onSelectCar.emit(this.car);
     };
 
-    const buttonRemove = new Button(wrap.node, 'button button_car', InnerButton.remove);
+    const buttonRemove = new Button(
+      this.buttonsControl.node,
+      'button button_car',
+      InnerButton.remove,
+      isDriving,
+    );
     buttonRemove.node.onclick = () => {
       this.onRemoveCar.emit(this.car);
     };
+
+    return [buttonSelect, buttonRemove];
   }
 
   renderButtonsEngine(isDriving: boolean) {
@@ -116,11 +132,13 @@ class Car extends Control {
     return this.track.node.clientWidth;
   }
 
-  public updateButtonEngine(state: boolean) {
+  public updateButtons(state: boolean) {
     const isDriving = state;
     this.buttonsEngineList.map((button) => button.destroy());
+    this.buttonsControlList.map((button) => button.destroy());
 
     this.buttonsEngineList = this.renderButtonsEngine(isDriving);
+    this.buttonsControlList = this.renderButtonsControl(isDriving);
   }
 }
 

@@ -26,7 +26,9 @@ class Settings extends Control {
 
   private buttonsControl: Control;
 
-  private buttonsList: Control[];
+  private buttonsControlList: Button[];
+
+  private buttonsChangeList: Button[] = [];
 
   constructor(
     parent: HTMLElement | null,
@@ -60,7 +62,7 @@ class Settings extends Control {
     );
 
     this.buttonsControl = new Control(this.node, 'div', 'settings__buttons');
-    this.buttonsList = this.renderButton(false);
+    this.buttonsControlList = this.renderButton(false);
   }
 
   public onInputChange = new Signal<Omit<ISettings, 'create' | 'update'>>();
@@ -91,6 +93,7 @@ class Settings extends Control {
     };
 
     const button = new Button(parent, 'button', text, disable);
+    this.buttonsChangeList.push(button);
     const list = [inputName, inputColor, button];
 
     button.node.onclick = () => {
@@ -142,7 +145,7 @@ class Settings extends Control {
       buttonReset.node.disabled = true;
     };
 
-    const buttonGenerateCars = new Button(this.buttonsControl.node, 'button', InnerButton.generate);
+    const buttonGenerateCars = new Button(this.buttonsControl.node, 'button', InnerButton.generate, isRace);
     buttonGenerateCars.node.onclick = () => {
       this.onGenerateCars();
     };
@@ -152,9 +155,11 @@ class Settings extends Control {
 
   public updateButtons(raceState: boolean) {
     const isRace = raceState;
-    this.buttonsList.map((button) => button.destroy());
+    this.buttonsControlList.map((button) => button.destroy());
 
-    this.buttonsList = this.renderButton(isRace);
+    this.buttonsControlList = this.renderButton(isRace);
+
+    this.buttonsChangeList.forEach((button) => { button.node.disabled = isRace; });
   }
 }
 

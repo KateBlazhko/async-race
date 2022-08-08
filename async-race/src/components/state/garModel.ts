@@ -161,9 +161,11 @@ class GarModel {
 
   public onRemoveCar = new Signal<number>();
 
+  public onFinish = new Signal<boolean>();
+
   private checkRaceState() {
-    // const maxCountCar = this.pageCars.page.length;
-    if (Object.keys(this.carState).length > 0) {
+    const maxCountCar = this.pageCars.page.length;
+    if (Object.keys(this.carState).length === maxCountCar) {
       this.raceState = true;
       return;
     }

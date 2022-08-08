@@ -309,7 +309,7 @@ body {
   top: 0;
   width: var(--car-width);
 
-  transition: left 0.1s linear;
+  transition: left 0.3s linear;
 }
 
 .garage__image-flag{
