@@ -189,7 +189,7 @@ class GarView extends Control {
       this.model.onChangeRaceState.add(this.pagination.updateButtons.bind(this.pagination));
 
       this.model.onShowWinner.add(this.renderNotification.bind(this));
-      // this.model.onFinish.add()
+      this.model.onFinish.add(this.settings.updateReset.bind(this.settings));
 
       this.settings.onInputChange.add(this.controller.inputChange.bind(this.controller));
     }

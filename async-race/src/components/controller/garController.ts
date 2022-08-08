@@ -189,15 +189,12 @@ class GarController extends AppController {
   }
 
   private async driveRace(resultStart: [IEngineData, TrackData, string][]) {
-    this.abortController = new AbortController();
-    const { signal } = this.abortController;
-
     const resultRace = await Promise.any(resultStart.map(async (race) => {
       const [engineData, trackData, name] = race;
       const [[id, track]] = Object.entries(trackData);
 
       const timeMoving = this.countAnimationTime(engineData, +id, ...track);
-      const resultCar = await this.toDriveMode(+id, signal);
+      const resultCar = await this.toDriveMode(+id);
 
       if (resultCar === false) throw Error;
       return {
@@ -276,7 +273,7 @@ class GarController extends AppController {
     }
   }
 
-  private async toDriveMode(id: number, signal: AbortSignal) {
+  private async toDriveMode(id: number, signal?: AbortSignal) {
     const endpoint: string = '/engine';
     try {
       this.addCarState(id, true);
@@ -298,7 +295,10 @@ class GarController extends AppController {
         throw Error(`Car#${id} is broken`);
       }
 
-      if (result) return true;
+      if (result) {
+        this.changeCarState(id, false);
+        return true;
+      }
 
       throw new Error('Car is stopped');
     } catch (e: unknown) {

@@ -24,6 +24,8 @@ class Settings extends Control {
 
   private updateInputList: Control<HTMLInputElement | HTMLButtonElement>[];
 
+  private buttonReset: Button | null = null;
+
   private buttonsControl: Control;
 
   private buttonsControlList: Button[];
@@ -139,10 +141,10 @@ class Settings extends Control {
       buttonRace.node.disabled = true;
     };
 
-    const buttonReset = new Button(this.buttonsControl.node, 'button', InnerButton.reset, !isRace);
-    buttonReset.node.onclick = () => {
+    this.buttonReset = new Button(this.buttonsControl.node, 'button', InnerButton.reset, true);
+    this.buttonReset.node.onclick = () => {
       this.onReset();
-      buttonReset.node.disabled = true;
+      if (this.buttonReset) this.buttonReset.node.disabled = true;
     };
 
     const buttonGenerateCars = new Button(this.buttonsControl.node, 'button', InnerButton.generate, isRace);
@@ -150,16 +152,19 @@ class Settings extends Control {
       this.onGenerateCars();
     };
 
-    return [buttonRace, buttonReset, buttonGenerateCars];
+    return [buttonRace, buttonGenerateCars];
   }
 
   public updateButtons(raceState: boolean) {
     const isRace = raceState;
-    this.buttonsControlList.map((button) => button.destroy());
 
-    this.buttonsControlList = this.renderButton(isRace);
+    this.buttonsControlList.forEach((button) => { button.node.disabled = isRace; });
 
     this.buttonsChangeList.forEach((button) => { button.node.disabled = isRace; });
+  }
+
+  public updateReset(isFinish: boolean) {
+    if (this.buttonReset) this.buttonReset.node.disabled = !isFinish;
   }
 }
 

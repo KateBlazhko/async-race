@@ -98,6 +98,9 @@ class GarModel {
     const lastLength = Object.keys(this.carState).length;
     this._carState = value;
 
+    if (Object.keys(this.carState).length > 0
+      && Object.values(this.carState).every((state) => state === false)) this.onFinish.emit(true);
+
     if (Object.keys(this.carState).length !== lastLength) {
       this.checkRaceState();
       this.onChangeCarState.emit(this._carState);
@@ -164,12 +167,13 @@ class GarModel {
   public onFinish = new Signal<boolean>();
 
   private checkRaceState() {
-    const maxCountCar = this.pageCars.page.length;
-    if (Object.keys(this.carState).length === maxCountCar) {
+    // const maxCountCar = this.pageCars.page.length;
+    if (Object.keys(this.carState).length > 0) {
       this.raceState = true;
       return;
     }
     if (Object.keys(this.carState).length === 0) {
+      this.onFinish.emit(false);
       if (this.isFinish) this.raceState = false;
     }
   }
